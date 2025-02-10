@@ -2,7 +2,11 @@ import axios from 'axios';
 
 const axiosInstance = axios.create({
 <<<<<<< HEAD
+<<<<<<< HEAD
   baseURL: 'https://tiklog-ms.onrender.com/api/v1', // Replace with your API URL
+=======
+  baseURL: 'https://testpatience.onrender.com/api/v1', // Replace with your API URL
+>>>>>>> 3d9654b (initialize axios and create authstore)
 =======
   baseURL: 'https://testpatience.onrender.com/api/v1', // Replace with your API URL
 >>>>>>> 3d9654b (initialize axios and create authstore)
@@ -13,7 +17,11 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
 <<<<<<< HEAD
+<<<<<<< HEAD
     const token = localStorage.getItem('accessToken'); // Get token from localStorage
+=======
+    const token = localStorage.getItem('token'); // Get token from localStorage
+>>>>>>> 3d9654b (initialize axios and create authstore)
 =======
     const token = localStorage.getItem('token'); // Get token from localStorage
 >>>>>>> 3d9654b (initialize axios and create authstore)

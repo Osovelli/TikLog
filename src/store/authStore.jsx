@@ -6,14 +6,18 @@ const useAuthStore = create((set) => ({
   user: null,
   token: null,
   adminData: null,
+<<<<<<< HEAD
   isSignup: false,
   isLoggedIn: false,
   isOtp: false,
   isProfileComplete: false,
+=======
+>>>>>>> 3d9654b (initialize axios and create authstore)
   loading: false,
   error: null,
   showErrorModal: false,
 
+<<<<<<< HEAD
   login: async ({phone_number, password}) => {
     set({ loading: true, error: null });
     try {
@@ -28,10 +32,28 @@ const useAuthStore = create((set) => ({
       console.error("Login failed", error);
       const errorMessage = error.response?.data?.message || "Login failed. Please try again.";
       toast.error(errorMessage)
+=======
+
+  login: async (email, password) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await axiosInstance.post('/admin/login', { email, password });
+      const token  = response.data?.data?.token;
+      const user = response.data?.data?.user
+      console.log("LOGIN token", token)
+      console.log("LOGIN User", user)
+      console.log("LOGIN User", response)
+      localStorage.setItem('token', token);
+      set({ user: user, token: token, loading: false });
+    } catch (error) {
+      console.error("Login failed", error);
+      toast.error(error.response.data.message)
+>>>>>>> 3d9654b (initialize axios and create authstore)
       set({ loading: false, error: 'Login failed. Please check your credentials.', showErrorModal: true });
     }
   },
 
+<<<<<<< HEAD
   signup: async ({ email, phone_number, country_code, password }) => {
     set({ loading: true, error: null });
     try {
@@ -139,6 +161,27 @@ const useAuthStore = create((set) => ({
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     set({ user: null, token: null, isLoggedIn: false });
+=======
+  getMe: async () => {
+		set({ loading: true });
+
+		try {
+			const res = await axiosInstance.get(`/admin/me`);
+			set({  loading: false,  adminData: res.data.data});
+			console.log("single client result",res.data.data)
+			//toast.success(res.data.message);
+		} catch (error) {
+			set({ error: error.response?.data?.message || "Error Fetching Admin", loading: false });
+			console.log(error);
+			toast.error(error.response.data.message || "An error occurred");
+		}
+	},
+
+
+  logout: () => {
+    localStorage.removeItem('token');
+    set({ user: null, token: null });
+>>>>>>> 3d9654b (initialize axios and create authstore)
   },
   closeErrorModal: () => set({ showErrorModal: false, error: null }),
 }));
