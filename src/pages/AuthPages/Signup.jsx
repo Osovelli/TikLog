@@ -14,6 +14,7 @@ export const Signup = () => {
     title='Enter your phone number'
     description="Enter your phone number to continue We'll use this to keep your account secure."
     >
+      {/* input phone number */}
       <PhoneInput />
       <InputComponent password={true} type={showPassword ? "text" : "password"} placeholder="Password" />
       <InputComponent password={true} type={showPassword ? "text" : "password"} placeholder="Confirm password" />
