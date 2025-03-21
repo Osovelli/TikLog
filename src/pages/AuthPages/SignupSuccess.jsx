@@ -2,9 +2,11 @@ import { AuthLayout } from '@/components/_AuthComponents/AuthLayout'
 import { ButtonComponent } from '@/components/ButtonComponent'
 import InputComponent from '@/components/InputComponent'
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router'
 
 export const SignUpSuccess = () => {
-
+  const navigate = useNavigate()
+  
   return (
     <>
     <AuthLayout
@@ -13,7 +15,7 @@ export const SignUpSuccess = () => {
     description="Your account has been successfully created. You're now ready to send packages of any size, safely and in real-time, to your desired location."
     
     >
-      <ButtonComponent variant="primary" label={'Login'} buttonStyles='h-[52px] w-full' />
+      <ButtonComponent variant="primary" label={'Login'} buttonStyles='h-[52px] w-full' onClick={() => navigate('/signin')}  />
     </AuthLayout>
     </>
   )

@@ -9,10 +9,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import useAuthStore from '@/store/authStore'
 
 
 export const SidebarProfile = ({ name, phoneNumber, avatarUrl, isVerified = false }) => {
+  const { logout } = useAuthStore()
+  const navigate = useNavigate()
+
+  const handlelogout = () => {
+    logout()
+    navigate('/signin')
+  }
+
   return (
     <div className="flex items-center space-x-4 p-4 hover:bg-gray-50 bg-white rounded-lg shadow">
       <div className="relative">
@@ -46,7 +55,7 @@ export const SidebarProfile = ({ name, phoneNumber, avatarUrl, isVerified = fals
           <DropdownMenuItem>
             <Link to={"/signin"} className='flex gap-1'>
               <LogOut className="mr-2 h-4 w-4" oncl />
-              <span>Log out</span>
+              <button onClick={handlelogout}>Log out</button>
             </Link>
           </DropdownMenuItem>
         </DropdownMenuContent>

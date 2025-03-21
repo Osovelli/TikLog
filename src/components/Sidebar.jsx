@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { Home, User, Wallet, Bell, Tag, List, BarChart2, Settings, ChevronUp, Menu, X } from 'lucide-react'
 import { Logo } from '@/icon/Icons'
 import { SidebarProfile } from './SidebarProfile'
-import { Button } from "@/components/ui/button"
 import { Link, useLocation } from 'react-router-dom'
+import useAuthStore from '@/store/authStore'
 
 const SidebarItem = ({ icon, text, routeName}) => {
   const location = useLocation();
@@ -21,6 +21,8 @@ const SidebarItem = ({ icon, text, routeName}) => {
 
 export const Sidebar = ({ isOpen, toggleSidebar }) => {
   const [isMobile, setIsMobile] = useState(false)
+ /*  const [user, setUser] = useState({}) */
+  const { getMe, user, loading, isProfileComplete } = useAuthStore()
 
   useEffect(() => {
     const checkIsMobile = () => {
@@ -32,6 +34,12 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
 
     return () => window.removeEventListener('resize', checkIsMobile)
   }, [])
+
+  useEffect(() => {
+    getMe()
+  }, [isProfileComplete])
+
+  console.log("USER", user)
 
   return (
     <>
@@ -64,10 +72,11 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
           
           {/* User Profile Section */}
           <SidebarProfile
-            name="John Messi Doe"
-            phoneNumber="08100000000"
+            //name={user?.firstname + " " + user?.lastname}
+            name={`${user?.firstname} ${user?.lastname}`}
+            phoneNumber={user?.phone_number}
             avatarUrl="Avatar1.png"
-            isVerified={true}
+            isVerified={user?.is_accepted}
           />
         </div>
       </div>

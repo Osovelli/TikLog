@@ -8,16 +8,15 @@ import {
 import { ButtonComponent } from '../ButtonComponent';
 import { useNavigate } from 'react-router';
 
-export default function OTPWithCountdown() {
+export default function OTPWithCountdown({otp, setOtp, handleContinue}) {
   const [timer, setTimer] = useState(90); // 90 seconds = 1:30
-  const [otp, setOtp] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
 
   const navigate = useNavigate()
 
-  const handleContinue = () => {
+  /* const handleContinue = () => {
     navigate('/reset-password/success')
-  }
+  } */
 
   useEffect(() => {
     let interval;
@@ -49,7 +48,7 @@ export default function OTPWithCountdown() {
       <InputOTP
         value={otp}
         onChange={setOtp}
-        maxLength={4}
+        maxLength={6}
         disabled={isDisabled}
       >
         <InputOTPGroup className='flex gap-3'>
@@ -58,6 +57,9 @@ export default function OTPWithCountdown() {
           <InputOTPSeparator className=""/>
           <InputOTPSlot index={2} className='' />
           <InputOTPSlot index={3} className='' />
+          <InputOTPSeparator className=""/>
+          <InputOTPSlot index={4} className='' />
+          <InputOTPSlot index={5} className='' />
         </InputOTPGroup>
       </InputOTP>
       <div className="flex items-center space-x-12 text-sm">

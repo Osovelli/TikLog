@@ -6,7 +6,7 @@ import React from 'react'
 export const Profile = () => {
   return (
     <AppLayout title={"Profile"} icon={<User />}>
-      <UserProfile />
+      <UserProfile  />
     </AppLayout>
   )
 }

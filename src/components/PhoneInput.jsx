@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, forwardRef, memo} from "react"
 import { Check, ChevronsUpDown, Search } from "lucide-react"
 import { getCountries, getCountryCallingCode, AsYouType } from 'libphonenumber-js'
 import * as flagIcons from 'country-flag-icons/react/3x2'
@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import CountryCodeSelect from "./GetCountryCode"
+
 
 /* const getCountryName = (countryCode) => {
   try {
@@ -160,56 +161,54 @@ const PhoneInput = React.forwardRef(({
 
 PhoneInput.displayName = "PhoneInput" */
 
-const PhoneInput = React.forwardRef(({ 
+
+const PhoneInput = forwardRef(({ 
   label, 
   error, 
   className,
   onChange,
   value = '',
+  defaultCountryCode = '+234',
   ...props 
 }, ref) => {
-  const [countryCode, setCountryCode] = useState('+234')
-  const [phoneNumber, setPhoneNumber] = useState('')
+  const [localPhoneNumber, setLocalPhoneNumber] = useState('');
+  const [selectedCountryCode, setSelectedCountryCode] = useState(defaultCountryCode);
 
   useEffect(() => {
-    if (typeof value === 'string' && value !== '') {
-      const formatter = new AsYouType()
-      formatter.input(value)
-      setCountryCode(formatter.getCountry() ? `+${getCountryCallingCode(formatter.getCountry())}` : '+234')
-      setPhoneNumber(formatter.getNationalNumber())
+    if (value) {
+      const formatter = new AsYouType();
+      formatter.input(value);
+      setLocalPhoneNumber(formatter.getNationalNumber() || '');
     }
-  }, [value])
+  }, [value]);
 
   const handleCountryChange = (code) => {
-    setCountryCode(code)
-    updatePhone(phoneNumber, code)
-  }
+    setSelectedCountryCode(code);
+    updateParentValue(localPhoneNumber, code);
+  };
 
   const handlePhoneChange = (e) => {
-    const newValue = e.target.value
-    setPhoneNumber(newValue)
-    updatePhone(newValue, countryCode)
-  }
+    const newNumber = e.target.value.replace(/[^0-9]/g, '');
+    setLocalPhoneNumber(newNumber);
+    updateParentValue(newNumber, selectedCountryCode);
+  };
 
-  const updatePhone = (number, code) => {
-    const formatter = new AsYouType()
-    formatter.input(`${code}${number}`)
-    
+  const updateParentValue = (number, code) => {
     if (onChange) {
       onChange({
+        phoneNumber: number,
         countryCode: code,
-        nationalNumber: number,
-        formattedNumber: formatter.getNumber()?.formatInternational() || ''
-      })
+        fullNumber: `${code}${number}`
+      });
     }
-  }
+  };
 
   return (
     <div className={className}>
       {label && <Label htmlFor="phone">{label}</Label>}
       <div className="flex mt-1">
         <CountryCodeSelect
-          value={countryCode}
+          value={selectedCountryCode}
           onChange={handleCountryChange}
         />
         <Input
@@ -219,7 +218,7 @@ const PhoneInput = React.forwardRef(({
             "flex-1 rounded-l-none focus-visible:ring-0 focus-visible:ring-offset-0",
             error && "border-red-500"
           )}
-          value={phoneNumber}
+          value={localPhoneNumber}
           onChange={handlePhoneChange}
           ref={ref}
           {...props}
@@ -227,9 +226,9 @@ const PhoneInput = React.forwardRef(({
       </div>
       {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
     </div>
-  )
-})
+  );
+});
 
-PhoneInput.displayName = "PhoneInput"
+PhoneInput.displayName = "PhoneInput";
 
-export default PhoneInput
+export default PhoneInput;

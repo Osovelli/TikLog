@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, forwardRef } from 'react';
 import {
   Select,
   SelectContent,
@@ -8,13 +8,7 @@ import {
 } from "@/components/ui/select";
 import { getCountries, getCountryCallingCode } from 'libphonenumber-js';
 import * as flagIcons from 'country-flag-icons/react/3x2';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Button } from './ui/button';
-import { Check, ChevronsUpDown } from 'lucide-react';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from './ui/command';
-import { cn } from '@/lib/utils';
 
-// Get metadata about countries
 const getCountryName = (countryCode) => {
   try {
     return new Intl.DisplayNames(['en'], { type: 'region' }).of(countryCode);
@@ -23,27 +17,44 @@ const getCountryName = (countryCode) => {
   }
 };
 
-// Get all countries and their data
-const countries = getCountries()
-  .map(country => {
-    const FlagComponent = flagIcons[country];
-    return {
-      code: `+${getCountryCallingCode(country)}`,
-      country,
-      name: getCountryName(country),
-      FlagComponent
-    };
-  })
-  .filter(country => country.FlagComponent) // Ensure we have a flag
-  .sort((a, b) => a.name.localeCompare(b.name));
-
-const CountryCodeSelect = React.forwardRef(({ 
+const CountryCodeSelect = forwardRef(({ 
   onChange, 
-  value = "+234", // Default to Nigeria
+  value = "+234",
   className,
   ...props 
 }, ref) => {
-  const selectedCountry = countries.find(c => c.code === value) || countries[0];
+  const countries = useMemo(() => {
+    // Get all countries and their data
+    const allCountries = getCountries()
+      .map(country => {
+        const FlagComponent = flagIcons[country];
+        return {
+          id: country,
+          code: `+${getCountryCallingCode(country)}`,
+          country,
+          name: getCountryName(country),
+          FlagComponent
+        };
+      })
+      .filter(country => country.FlagComponent);
+
+    // Handle duplicate country codes by keeping only the first occurrence
+    const uniqueCountries = allCountries.reduce((acc, current) => {
+      const isDuplicate = acc.find(item => item.code === current.code);
+      if (!isDuplicate) {
+        acc.push(current);
+      }
+      return acc;
+    }, []);
+
+    return uniqueCountries.sort((a, b) => a.name.localeCompare(b.name));
+  }, []);
+
+  const selectedCountry = useMemo(() => 
+    countries.find(c => c.code === value) || countries[0],
+    [value, countries]
+  );
+
   const FlagComponent = selectedCountry.FlagComponent;
 
   return (
@@ -60,9 +71,9 @@ const CountryCodeSelect = React.forwardRef(({
         </SelectValue>
       </SelectTrigger>
       <SelectContent className="max-h-[300px]">
-        {countries.map(({ code, name, FlagComponent }) => (
+        {countries.map(({ id, code, name, FlagComponent }) => (
           <SelectItem 
-            key={code} 
+            key={id} // Using country ID (ISO code) as key instead of phone code
             value={code}
             className="cursor-pointer py-2"
           >

@@ -7,7 +7,7 @@ import { ResetPassword } from './pages/AuthPages/ResetPassword';
 import { ResetPasswordSuccess } from './pages/AuthPages/ResetPasswordSuccess';
 import { SignUpSuccess } from './pages/AuthPages/SignupSuccess';
 import { SignUpOTP } from './pages/AuthPages/SignupOtp';
-import { SignupComplete } from './pages/AuthPages/SignUpComplete';
+import { GetToKnowUser } from './pages/AuthPages/SignUpComplete';
 import { HomePage } from './pages/HomePage';
 import { DeliveryPage } from './pages/DeliveryPage';
 import { MyDeliveries } from './pages/MyDeliveries';
@@ -15,6 +15,7 @@ import { Wallet } from './pages/WalletPage';
 import { Profile } from './pages/Profile';
 import { Notification } from './pages/Notification';
 import { SettingsPage } from './pages/SettingsPage';
+import { Toaster } from 'react-hot-toast';
 
 
 function App() {
@@ -28,7 +29,7 @@ function App() {
                 <Route path='/reset-password/success' element={<ResetPasswordSuccess />} />
                 <Route path='/reset-password-otp' element={<ResetPasswordOtp />} />
                 <Route path='/signup/success' element={<SignUpSuccess />} />
-                <Route path='/signup/complete' element={<SignupComplete />} />
+                <Route path='/signup/get-to-know' element={<GetToKnowUser/>} />
                 <Route path='/signup-otp' element={<SignUpOTP/>} />
                 <Route path='/' element={<HomePage />} />
                 <Route path='/delivery' element={<DeliveryPage />} />
@@ -38,6 +39,7 @@ function App() {
                 <Route path='/notification' element={<Notification />} />
                 <Route path='/settings' element={<SettingsPage />} />
             </Routes>
+            <Toaster />
         </BrowserRouter>
     )
 }

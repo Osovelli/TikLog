@@ -7,8 +7,12 @@ import { Table } from '@/components/Table'
 import { AmountForm, TransferForm } from '@/components/_WalletComponents/TransferFlowModal'
 import { useModal } from '@/lib/ModalContext'
 import { PaymentMethodItem } from '@/lib/PaymentMethodHelper'
-import {ArrowUpRightIcon, Wallet2Icon, WalletIcon } from 'lucide-react'
-import { useCallback, useState } from 'react'
+import {ArrowUpRightIcon, DollarSignIcon, Wallet2Icon, WalletIcon } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import useAuthStore from '@/store/authStore'
+import { use } from 'react'
+import toast from 'react-hot-toast'
+import { FaMoneyBill } from 'react-icons/fa'
 
 const paymentMethods = [
   {
@@ -82,6 +86,17 @@ export const Wallet = () => {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   const {openModal, closeModal} = useModal()
+  const { user, loading } = useAuthStore() // Fetch user data here
+
+  useEffect(() => {
+    if (user?.wallet == 0) {
+      toast.error('Please fund your wallet to continue using our services', {
+        icon: <FaMoneyBill size={24} />,
+        duration: 5000,
+        className: 'p-4 text-sm text-red-600',
+      });
+    }
+  }, [user?.wallet])
   
    // Handler for row clicks
    const handleRowClick = (transaction) => {
@@ -254,7 +269,7 @@ const handleFundWalletModal = useCallback(() => {
         <div className='flex flex-col md:flex-row gap-3'>
           <CardComponent
           title="Wallet balance"
-          subtitle="₦20,000,000.00"
+          subtitle={ loading ? '' : `₦${user?.wallet}.00`}
           variant='blue'
           content={
             <div className='flex space-x-2 p-1 w-full mt-16'>
