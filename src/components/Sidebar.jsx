@@ -64,7 +64,7 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
               <SidebarItem icon={<Wallet size={20} />} text="Wallet" routeName={'wallet'} />
               <SidebarItem icon={<Bell size={20} />} text="Notifications" routeName={'notification'} />
               <SidebarItem icon={<Tag size={20} />} text="Deals" routeName={'deals'}/>
-              <SidebarItem icon={<List size={20} />} text="My deliveries" routeName={'deliveries'} />
+              <SidebarItem icon={<List size={20} />} text="My deliveries" routeName={'delivery'} />
               <SidebarItem icon={<BarChart2 size={20} />} text="Statistics" routeName={'statistics'}/>
               <SidebarItem icon={<Settings size={20} />} text="Settings" routeName={'settings'} />
             </nav>

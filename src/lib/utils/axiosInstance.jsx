@@ -1,16 +1,8 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-<<<<<<< Updated upstream
   baseURL: 'https://tiklog-ms.onrender.com/api/v1', // Replace with your API URL
-=======
-<<<<<<< Updated upstream
-  baseURL: 'https://testpatience.onrender.com/api/v1', // Replace with your API URL
->>>>>>> Stashed changes
   //timeout: 1000,
-=======
-  baseURL: 'https://tiklog-ms.onrender.com/api/v1', 
->>>>>>> Stashed changes
 });
 
 // Add a request interceptor

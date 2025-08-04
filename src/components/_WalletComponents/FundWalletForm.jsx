@@ -25,15 +25,8 @@ export const FundWalletForm = ({ onContinue }) => {
     setAmount(value);
   };
 
-<<<<<<< Updated upstream
   const initiatePaystackPayment = async () => {
     console.log("button works")
-=======
-<<<<<<< Updated upstream
-=======
-  const initiatePaystackPayment = async () => {
-    //console.log("button works")
->>>>>>> Stashed changes
     /* if (!amount || isNaN(amount) || amount <= 0) {
       alert("Please enter a valid amount.");
       return;
@@ -44,19 +37,11 @@ export const FundWalletForm = ({ onContinue }) => {
       
       setPaymentUrl(response.data.data.data?.authorization_url);
       console.log("payment url", response.data.data.data?.authorization_url) 
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
         //setIsPaystackModalOpen(true);
         const authUrl = response.data.data.data?.authorization_url;
         window.open(authUrl, "_blank"); // Open Paystack in a new tab
         setReference(response.data.data.data?.reference);
-<<<<<<< Updated upstream
         console.log("REFERENCE", reference);
-=======
-        console.log("REFERENCE: ", reference);
->>>>>>> Stashed changes
         //window.open(authUrl, "_blank")
         /* if (newTab) {
           const interval = setInterval(async () => {
@@ -90,12 +75,7 @@ export const FundWalletForm = ({ onContinue }) => {
 
         try {
 
-<<<<<<< Updated upstream
           const verifyResponse = await axiosInstance.get( `/wallet/verify/${reference}`);
-=======
-          const verifyResponse = await axiosInstance.get(`/wallet/verify/${reference}`);
-          console.log("VERIFY RESPONSE: ", verifyResponse)
->>>>>>> Stashed changes
            if (verifyResponse.data.data.status === "success") {
 
             setPaymentStatus("success");
@@ -104,11 +84,7 @@ export const FundWalletForm = ({ onContinue }) => {
           } else if (verifyResponse.data.data.status === "failed") {
 
             setPaymentStatus("failed");
-<<<<<<< Updated upstream
 
-=======
-            console.log('Failed', verifyResponse.data.data.status)
->>>>>>> Stashed changes
           }
 
           setIsModalOpen(true);
@@ -142,11 +118,7 @@ export const FundWalletForm = ({ onContinue }) => {
     }
   };
 
-<<<<<<< Updated upstream
   const verifyPayment = async (reference) => {
-=======
-  /* const verifyPayment = async (reference) => {
->>>>>>> Stashed changes
     try {
       const response = await axiosInstance.get(`/wallet/verify/${reference}`);
       setPaymentStatus(response.data.data.status === "success" ? "success" : "failed");
@@ -156,18 +128,10 @@ export const FundWalletForm = ({ onContinue }) => {
       setShowModal(true);
       setPaymentUrl(""); // Close iframe
     }
-<<<<<<< Updated upstream
   };
 
   window.addEventListener("message", handlePaymentCompletion);
 
-=======
-  }; */
-
-  window.addEventListener("message", handlePaymentCompletion);
-
->>>>>>> Stashed changes
->>>>>>> Stashed changes
   return (
     <div className="space-y-4">
       <Input
