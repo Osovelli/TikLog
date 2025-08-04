@@ -21,6 +21,7 @@ const useAuthStore = create((set) => ({
   login: async ({phone_number, password}) => {
     set({ loading: true, error: null });
     try {
+<<<<<<< Updated upstream
       const response = await axiosInstance.post('/auth/user', { phone_number, password });
       const token  = response.data?.data?.token;
       const user = response.data?.data;
@@ -28,6 +29,26 @@ const useAuthStore = create((set) => ({
       localStorage.setItem('accessToken', response.data.data.token);
       localStorage.setItem('refreshToken', response.data.data.refresh_token      );
       set({ user: user, loading: false, isLoggedIn: true });
+=======
+<<<<<<< Updated upstream
+      const response = await axiosInstance.post('/admin/login', { email, password });
+      const token  = response.data?.data?.token;
+      const user = response.data?.data?.user
+      console.log("LOGIN token", token)
+      console.log("LOGIN User", user)
+      console.log("LOGIN User", response)
+      localStorage.setItem('token', token);
+      set({ user: user, token: token, loading: false });
+=======
+      const response = await axiosInstance.post('/auth/user', { phone_number, password });
+      //const token  = response.data?.data?.token;
+      const user = response.data?.data;
+      console.log("LOGIN token", response)
+      localStorage.setItem('refreshToken', response?.data?.data?.refresh_token);
+      localStorage.setItem('accessToken', response.data?.data?.token);
+      set({ user: user, loading: false, isLoggedIn: true });
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
     } catch (error) {
       console.error("Login failed", error);
       const errorMessage = error.response?.data?.message || "Login failed. Please try again.";
@@ -156,6 +177,65 @@ const useAuthStore = create((set) => ({
       /* return { success: false, error: errorMessage }; */
     }
   },
+
+  
+  resetPassword: async ({ phone_number }) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await axiosInstance.post('/auth/user/forgot', { phone_number });
+      console.log("Reset Email Response", response)
+      toast.success(response.data.message);
+      set({ loading: false });
+      return response?.data;
+    } catch (error) {
+      console.error("Reset Email failed", error);
+      toast.error(error.response.data.message)
+      set({ loading: false, error: 'Reset Email failed. Please try again.', showErrorModal: true });
+      return { success: false, error: error.response.data.message };
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  changePassword: async ({ otp, new_password, confirm_password }) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await axiosInstance.post('/auth/user/reset_password', {
+        otp,
+        new_password,
+        confirm_password
+      });
+      console.log("Reset Password Response", response)
+      toast.success(response.data.message);
+      return response.data;
+    } catch (error) {
+      console.error("Reset Password failed", error);
+      toast.error(error.response.data.message)
+      set({ loading: false, error: 'Reset Password failed.'})
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  resendOtp: async ({email, id, firstname}) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await axiosInstance.post('/auth/user/resend_otp', {email, id, firstname});
+      console.log("Resend OTP Response", response)
+      toast.success("Otp sent successfully");
+      return response.data;
+    } catch (error) {
+      console.error("Resend OTP failed", error);
+      toast.error(error.response.data.message)
+      set({ loading: false, error: 'Resend OTP failed.'})
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+
 
   logout: () => {
     localStorage.removeItem('accessToken');

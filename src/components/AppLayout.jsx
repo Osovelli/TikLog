@@ -1,10 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AppHeader } from "./AppHeader";
 import { Sidebar } from "./Sidebar";
 import { Logo } from '@/icon/Icons'
+import useNotificationStore from '@/store/notificationStore';
 
 export const AppLayout = ({children, icon, title}) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const {getNotifications, notifications} = useNotificationStore()
+
+    useEffect(() => {
+        getNotifications();
+    }, []);
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -26,7 +32,8 @@ export const AppLayout = ({children, icon, title}) => {
           <AppHeader 
             icon={icon} 
             name={title} 
-            toggleSidebar={toggleSidebar} 
+            toggleSidebar={toggleSidebar}
+            notification={notifications}
           /> 
           
           {/* Scrollable content area */}
