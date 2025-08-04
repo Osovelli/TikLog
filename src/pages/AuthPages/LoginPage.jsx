@@ -125,7 +125,7 @@ export const LoginPage = () => {
           </span>
         </Link>
       </div>
-      {/* <div className="text-center text-gray-500">or</div>
+      <div className="text-center text-gray-500">or</div>
       <div className='w-full space-y-2'>
         <ButtonComponent 
           buttonStyles='h-[52px] w-full bg-white border-2 hover:bg-transparent' 
@@ -136,20 +136,12 @@ export const LoginPage = () => {
           icon={<Apple />} 
           label="Sign in with Apple">
         </ButtonComponent>
-      </div> */}
+      </div>
       <ButtonComponent
       label="Login"
       variant="primary"
       buttonStyles="h-[52px] w-full"
-<<<<<<< Updated upstream
       onClick={handleSignIn}
-=======
-<<<<<<< Updated upstream
-=======
-      onClick={handleSignIn}
-      disabled={loading}
->>>>>>> Stashed changes
->>>>>>> Stashed changes
        />
       <div className="px-8 py-4 border-t border-gray-200 text-center">
         <p className="text-sm text-gray-600">

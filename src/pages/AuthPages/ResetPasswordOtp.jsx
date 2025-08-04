@@ -1,6 +1,6 @@
 import { AuthLayout } from '@/components/_AuthComponents/AuthLayout'
 import { ButtonComponent } from '@/components/ButtonComponent'
-import OTPWithCountdown from '@/components/otpcomponent'
+import OTPWithCountdown from '@/components/_AuthComponents/OTPWithCountdown'
 
 
 import PhoneInput from '@/components/PhoneInput'

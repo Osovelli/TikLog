@@ -1,7 +1,5 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Settings, CheckCircle2, Tag } from 'lucide-react';
-import { use } from 'react';
-import useNotificationStore from '@/store/notificationStore';
 
 const NotificationIcon = ({ type }) => {
   const iconProps = { size: 20 };
@@ -90,9 +88,6 @@ export const NotificationComponent = () => {
       time: 'Feb20'
     }
   ];
-  
-
-
 
   const handleAction = (id) => {
     console.log('Action clicked for notification:', id);
