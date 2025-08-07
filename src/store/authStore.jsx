@@ -22,13 +22,67 @@ const useAuthStore = create((set) => ({
       const user = response.data?.data;
       console.log("LOGIN token", response);
       localStorage.setItem('accessToken', response.data.data.token);
-      localStorage.setItem('refreshToken', response.data.data.refresh_token      );
+      localStorage.setItem('refreshToken', response.data.data.refresh_token);
       set({ user: user, loading: false, isLoggedIn: true });
     } catch (error) {
       console.error("Login failed", error);
       const errorMessage = error.response?.data?.message || "Login failed. Please try again.";
       toast.error(errorMessage)
       set({ loading: false, error: 'Login failed. Please check your credentials.', showErrorModal: true });
+    }
+  },
+
+  forgotPassword: async ({phone_number}) => {
+		set({ loading: true });
+
+		try {
+			const res = await axiosInstance.post("/auth/user/forgot", { phone_number  });
+			set({  loading: false, sendToken: true  });
+			console.log("Token result data", res)
+			toast.success(res.data.message);
+			return res;
+		} catch (error) {
+			set({loading: false, error: error.response?.data?.message || "Error Creating price", sendToken: null})
+			console.log("Error Reseting Password", error)
+			throw error;
+		}
+	},
+
+	changePassword: async ({ otp, new_password, confirm_password }) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await axiosInstance.post('/auth/user/reset_password', {
+        otp,
+        new_password,
+        confirm_password
+      });
+      console.log("Reset Password Response", response)
+      toast.success(response.data.message);
+      return response.data;
+    } catch (error) {
+      console.error("Reset Password failed", error);
+      toast.error(error.response.data.message)
+      set({ loading: false, error: 'Reset Password failed.'})
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  resendOtp: async ({email, id, firstname}) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await axiosInstance.post('/auth/user/resend_otp', {email, id, firstname});
+      console.log("Resend OTP Response", response)
+      toast.success("Otp sent successfully");
+      return response.data;
+    } catch (error) {
+      console.error("Resend OTP failed", error);
+      toast.error(error.response.data.message)
+      set({ loading: false, error: 'Resend OTP failed.'})
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 

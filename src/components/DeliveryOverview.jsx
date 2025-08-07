@@ -1,12 +1,21 @@
 import { CardComponent } from "./CardComponent";
 
-export const DeliveryOverview = () => {
-    const stats = [
+export const DeliveryOverview = ({data}) => {
+    /* const stats = [
       { title: 'All time', value: '205' },
       { title: 'Delivered', value: '200' },
       { title: 'Cancelled', value: '3' },
       { title: 'In Progress', value: '2' },
+    ]; */
+
+    const stats = [
+      { title: 'All time', value: data?.allTime },
+      { title: 'Delivered', value: data?.delivered },
+      { title: 'Cancelled', value: data?.cancelled },
+      { title: 'In Progress', value: data?.inProgress },
     ];
+
+    console.log("Delivery Overview Data:", data);
   
     return (
       <CardComponent
@@ -14,8 +23,8 @@ export const DeliveryOverview = () => {
         action="This week"
         content={
           <div className="grid sm:grid-cols-4 grid-cols-2 gap-4 mt-4">
-            {stats.map((stat, index) => (
-              <div key={index}>
+            {stats?.map((stat, index) => (
+              <div className="text-center" key={index}>
                 <p className="text-sm text-gray-500">{stat.title}</p>
                 <p className="text-2xl font-semibold">{stat.value}</p>
               </div>

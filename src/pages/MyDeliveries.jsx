@@ -1,58 +1,41 @@
-import { AppLayout } from '@/components/AppLayout'
-import { ButtonComponent } from '@/components/ButtonComponent'
-import { Table } from '@/components/Table';
-import { Plus } from 'lucide-react'
-import React from 'react'
-
-// Example usage:
-const columns = [
-  { key: 'rideId', label: 'Ride ID' },
-  { key: 'from', label: 'From' },
-  { key: 'to', label: 'To' },
-  { key: 'vehicle', label: 'Vehicle' },
-  { key: 'deliveries', label: 'Deliveries' },
-  { key: 'status', label: 'Status' },
-  { key: 'fee', label: 'Fee' }
-];
-
-const data = [
-  {
-    id: 1,
-    rideId: '#123354',
-    from: 'Ikeja, Lagos',
-    to: 'Lekki, Lagos',
-    vehicle: 'Car',
-    deliveries: 2,
-    status: 'Delivered',
-    fee: '1,600'
-  },
-  // ... more data
-];
+import { AppLayout } from "@/components/AppLayout"
+import { DeliveryTable } from "@/components/_HomeOVerviewComponents/DeliveryTable"
+import { Truck } from "lucide-react"
+import { useEffect } from "react"
+import useDeliveryStore from "@/store/deliveryStore"
+import { CreateDeliveryButton } from "@/components/CreateDeliveryButton"
 
 export const MyDeliveries = () => {
+  const { getDeliveries, deliveriesData } = useDeliveryStore()
+  console.log("Deliveries Data", deliveriesData)
+
+  const handleGetDeliveries = async () => {
+    await getDeliveries()
+    //console.log("Deliveries Data", deliveriesData)
+  }
+
+  useEffect(() => {
+    handleGetDeliveries()
+  }, [])
+
   return (
-    <AppLayout title={'Deliveries'}>
-        <div className='p-8'>
-            <div className="flex justify-between items-start mb-8">
-                <div className='max-w-[10rem] sm:max-w-full'>
-                    <h2 className="sm:text-2xl text-base font-semibold">My Deliveries</h2>
-                    <span className='sm:text-sm text-xs text-[#868C98]'>Keep track of all your deliveries</span>
-                </div>
-                <ButtonComponent 
-                variant='primary' 
-                icon={<Plus size={16}/>} 
-                label={"Create New"} 
-                buttonStyles="sm:px-4 px-2 h-[30px] sm:h-[52px]" 
-                onClick={() => ('')} 
-                />
-            </div>
-            <Table 
-            data={data}
-            columns={columns}
-            onRowClick={(item) => console.log('clicked:', item)}
-            itemsPerPage={10}
-            />
+    <AppLayout title={"Deliveries"} icon={<Truck />}>
+      <div className="p-8 mt-10">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h2 className="text-2xl font-semibold">All Deliveries</h2>
+            <span className="text-sm text-[#868C98]">Manage and track your deliveries</span>
+          </div>
+          <CreateDeliveryButton label="New Delivery" buttonStyles="px-6" />
         </div>
+
+        {/* Deliveries content */}
+        <div className="rounded-lg shadow-sm">
+          <div className="bg-white">
+            <DeliveryTable data={deliveriesData} />
+          </div>
+        </div>
+      </div>
     </AppLayout>
   )
 }

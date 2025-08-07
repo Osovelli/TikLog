@@ -10,7 +10,7 @@ export const NotificationItem = ({ icon: Icon, title, message, time, isRead, onM
       ${!isRead ? 'border-r-2 border-red-500' : ''}`}
     onClick={onMarkRead}
   >
-    <div className={`p-2 rounded-full ${
+    <div className={`p-2 rounded-full h-9 ${
       Icon === CheckCircle2 ? 'bg-green-50 dark:bg-green-900' : 
       Icon === Settings ? 'bg-gray-50 dark:bg-gray-800' : 
       'bg-red-50 dark:bg-red-900'

@@ -269,7 +269,7 @@ const handleFundWalletModal = useCallback(() => {
         <div className='flex flex-col md:flex-row gap-3'>
           <CardComponent
           title="Wallet balance"
-          subtitle={ loading ? '' : `₦${user?.wallet}.00`}
+          subtitle={ loading ? 'XXXXX' : `₦${user?.wallet}.00`}
           variant='blue'
           content={
             <div className='flex space-x-2 p-1 w-full mt-16'>
