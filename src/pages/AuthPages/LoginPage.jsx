@@ -11,6 +11,7 @@ import { Apple, Google } from '@/icon/Icons'
 import InputComponent from '@/components/InputComponent'
 import { Link, useNavigate } from 'react-router-dom'
 import useAuthStore from '@/store/authStore'
+import { FaSpinner } from 'react-icons/fa'
 
 
 export const LoginPage = () => {
@@ -87,7 +88,7 @@ export const LoginPage = () => {
     title="Welcome Back!"
     description="Enter your phone number to continue"
     >
-      <div className='flex flex-col gap-3'>
+      <div className='flex flex-col gap-3 md:w-[380px]'>
          {/* <InputComponent 
           value={formData.email}
           onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
@@ -138,11 +139,19 @@ export const LoginPage = () => {
         </ButtonComponent>
       </div> */}
       <ButtonComponent
-      label="Login"
-      variant="primary"
-      buttonStyles="h-[52px] w-full"
-      onClick={handleSignIn}
-       />
+        label={
+          loading ? (
+            <span className="flex items-center justify-center">
+              <FaSpinner className="animate-spin mr-2" />
+              Loading...
+            </span>
+          ) : "Login"
+        }
+        variant="primary"
+        buttonStyles="h-[52px] w-full"
+        onClick={handleSignIn}
+        disabled={loading}
+      />
       <div className="px-8 py-4 border-t border-gray-200 text-center">
         <p className="text-sm text-gray-600">
           New to Tiklog? <Link to={"/signup"} className="text-[#3B3B8F] hover:underline">

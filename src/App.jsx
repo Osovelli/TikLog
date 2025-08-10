@@ -19,6 +19,7 @@ import { Toaster } from 'react-hot-toast';
 import { jwtDecode } from 'jwt-decode';
 import { StatisticsPage } from './pages/StatisticsPage';
 import NotFound from './pages/NotFound';
+import ReferralPage from './pages/ReferralPage';
 
 
 function App() {
@@ -108,6 +109,11 @@ function App() {
                 <Route path='/settings' element={
                     <ProtectedRoute>
                         <SettingsPage />
+                    </ProtectedRoute>
+                } />
+                <Route path='/referral' element={
+                    <ProtectedRoute>
+                        <ReferralPage />
                     </ProtectedRoute>
                 } />
             </Routes>

@@ -13,7 +13,7 @@ export const AuthLayout = ({
         <header className='w-full flex items-center p-4 h-[10vh]'>
           <Logo />  
         </header>
-        <section className='h-[80vh] flex flex-col justify-center items-center'>
+        <section className='h-[80vh] flex flex-col justify-center items-center text-center'>
             <div className='space-y-2 max-w-sm'>
                 <div>{authLogo}</div>
                 <h1 className='text-3xl max-w-sm font-bold'>{title}</h1>

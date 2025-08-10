@@ -94,21 +94,21 @@ export const AppHeader = ({ icon, name, toggleSidebar, notification = [] }) => {
 
         {/* Right section with actions */}
         <div className="flex gap-2 ml-auto items-center">
-          <motion.button
+          {/* <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             className="p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full"
           >
             <Search size={18} className="dark:text-white" />
-          </motion.button>
+          </motion.button> */}
 
-          <motion.button
+          {/* <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             className="p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full"
           >
             <HelpCircle size={18} className="dark:text-white" />
-          </motion.button>
+          </motion.button> */}
 
           <Popover onOpenChange={setIsOverlayVisible}>
             <PopoverTrigger asChild>

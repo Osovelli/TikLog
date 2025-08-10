@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Home, User, Wallet, Bell, Tag, List, BarChart2, Settings, ChevronUp, Menu, X } from 'lucide-react'
+import { Home, User, Wallet, Bell, Tag, List, BarChart2, Settings, ChevronUp, Menu, X, Share2Icon } from 'lucide-react'
 import { Logo } from '@/icon/Icons'
 import { SidebarProfile } from './SidebarProfile'
 import { Link, useLocation } from 'react-router-dom'
@@ -67,6 +67,7 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
               <SidebarItem icon={<List size={20} />} text="My deliveries" routeName={'deliveries'} />
               <SidebarItem icon={<BarChart2 size={20} />} text="Statistics" routeName={'statistics'}/>
               <SidebarItem icon={<Settings size={20} />} text="Settings" routeName={'settings'} />
+              <SidebarItem icon={<Share2Icon size={20} />} text="Share to Others" routeName={'referral'} />
             </nav>
           </div>
           
