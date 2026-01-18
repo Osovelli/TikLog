@@ -1,6 +1,7 @@
 import { Logo } from '@/icon/Icons'
 import React from 'react'
 import { Button } from '../ui/button'
+import { useNavigate } from 'react-router'
 
 export const AuthLayout = ({
     title,
@@ -8,9 +9,10 @@ export const AuthLayout = ({
     children,
     authLogo,
 }) => {
+    const navigate = useNavigate();
   return (
     <div className='h-[100vh] flex flex-col items-center'>
-        <header className='w-full flex items-center p-4 h-[10vh]'>
+        <header className='w-full flex items-center p-4 h-[10vh]' onClick={() => navigate('/')}>
           <Logo />  
         </header>
         <section className='h-[80vh] flex flex-col justify-center items-center text-center'>

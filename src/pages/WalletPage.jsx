@@ -1,299 +1,495 @@
-import { AppLayout } from '@/components/AppLayout'
-import { ButtonComponent } from '@/components/ButtonComponent'
-import { CardComponent } from '@/components/CardComponent'
-import { FundWalletForm } from '@/components/_WalletComponents/FundWalletForm'
-import SideSheet from '@/components/SheetComponent'
-import { Table } from '@/components/Table'
-import { AmountForm, TransferForm } from '@/components/_WalletComponents/TransferFlowModal'
-import { useModal } from '@/lib/ModalContext'
-import { PaymentMethodItem } from '@/lib/PaymentMethodHelper'
-import {ArrowUpRightIcon, DollarSignIcon, Wallet2Icon, WalletIcon } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
-import useAuthStore from '@/store/authStore'
-import { use } from 'react'
-import toast from 'react-hot-toast'
-import { FaMoneyBill } from 'react-icons/fa'
+import { AppLayout } from "@/components/AppLayout"
+import { ButtonComponent } from "@/components/ButtonComponent"
+import { CardComponent } from "@/components/CardComponent"
+import { FundWalletForm } from "@/components/_WalletComponents/FundWalletForm"
+import SideSheet from "@/components/SheetComponent"
+import { Table } from "@/components/Table"
+import { AmountForm, TransferForm } from "@/components/_WalletComponents/TransferFlowModal"
+import { useModal } from "@/lib/ModalContext"
+import { PaymentMethodItem } from "@/lib/PaymentMethodHelper"
+import { ArrowUpRightIcon, Wallet2Icon, WalletIcon, Loader2 } from "lucide-react"
+import { useCallback, useEffect, useState } from "react"
+import useAuthStore from "@/store/authStore"
+import toast from "react-hot-toast"
+import { FaMoneyBill } from "react-icons/fa"
+import useWalletStore from "@/store/walletStore"
 
 const paymentMethods = [
   {
-    type: 'visa',
-    number: '9235',
-    expiryDate: '09/28'
+    type: "visa",
+    number: "9235",
+    expiryDate: "09/28",
   },
   {
-    type: 'mastercard',
-    number: '9235',
-    expiryDate: '09/28'
-  }
-];
+    type: "mastercard",
+    number: "9235",
+    expiryDate: "09/28",
+  },
+]
 
 const content = (
   <div className="space-y-1">
-    <p className='text-sm'>Connected Payment methods</p>
+    <p className="text-sm">Connected Payment methods</p>
     {paymentMethods.map((method, index) => (
-      <PaymentMethodItem
-        key={index}
-        type={method.type}
-        number={method.number}
-        expiryDate={method.expiryDate}
-      />
+      <PaymentMethodItem key={index} type={method.type} number={method.number} expiryDate={method.expiryDate} />
     ))}
   </div>
-);
+)
 
 const columns = [
-  {key: 'id', label: 'Ride ID'},
-  { key: 'type', label: 'Type' },
-  { key: 'amount', label: 'Amount' },
-  { key: 'date', label: 'Date' },
-];
-
-const data = [
-  {
-    "type": "Wallet deposit",
-    "amount": "1,000.00",
-    "date": "Sep 18",
-    "id": "1234567890"
-  },
-  {
-    "type": "Transfer to",
-    "amount": "1,000.00",
-    "date": "Sep 18",
-    "id": "1234567890"
-  },
-  {
-    "type": "Withdrawal to wallet",
-    "amount": "1,000.00",
-    "date": "Sep 18",
-    "id": "1234567890"
-  },
-  {
-    "type": "Tiklog Delivery",
-    "amount": "1,000.00",
-    "date": "Sep 18",
-    "id": "1234567890"
-  },
-  {
-    "type": "Transfer to",
-    "amount": "1,000.00",
-    "date": "Sep 18",
-    "id": "1234567890"
-  }
+  { key: "id", label: "Transaction ID" },
+  { key: "type", label: "Type" },
+  { key: "amount", label: "Amount" },
+  { key: "date", label: "Date" },
+  { key: "status", label: "Status" },
 ]
 
 export const Wallet = () => {
-  const [openSideMenu, setOpenSideMenu] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [openSideMenu, setOpenSideMenu] = useState(false)
+  const [selectedTransaction, setSelectedTransaction] = useState(null)
 
-  const {openModal, closeModal} = useModal()
-  const { user, loading } = useAuthStore() // Fetch user data here
+  const { openModal, closeModal } = useModal()
+  const { user, loading } = useAuthStore()
+  const { getWalletHistory, walletHistory, isLoading, error } = useWalletStore()
 
   useEffect(() => {
     if (user?.wallet == 0) {
-      toast.error('Please fund your wallet to continue using our services', {
+      toast.error("Please fund your wallet to continue using our services", {
         icon: <FaMoneyBill size={24} />,
         duration: 5000,
-        className: 'p-4 text-sm text-red-600',
-      });
+        className: "p-4 text-sm text-red-600",
+      })
     }
   }, [user?.wallet])
-  
-   // Handler for row clicks
-   const handleRowClick = (transaction) => {
-    setSelectedTransaction(transaction);
-    setOpenSideMenu(true);
-  };
+
+  useEffect(() => {
+    getWalletHistory()
+  }, [getWalletHistory])
+
+  // Transform wallet history data to match table structure
+  const transformedTransactionData =
+    walletHistory?.map((transaction) => {
+      // Format date
+      const formatDate = (dateString) => {
+        const date = new Date(dateString)
+        return date.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      }
+
+      // Format transaction type
+      const formatTransactionType = (type) => {
+        switch (type?.toLowerCase()) {
+          case "deposit":
+            return "Wallet deposit"
+          case "withdrawal":
+            return "Withdrawal"
+          case "transfer":
+            return "Transfer to"
+          case "delivery":
+            return "Tiklog Delivery"
+          default:
+            return type || "Transaction"
+        }
+      }
+
+      // Format amount
+      const formatAmount = (amount) => {
+        return new Intl.NumberFormat("en-NG", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(amount)
+      }
+
+      // Format status
+      const formatStatus = (status) => {
+        return status?.charAt(0).toUpperCase() + status?.slice(1).toLowerCase() || "Pending"
+      }
+
+      return {
+        id: transaction.reference || transaction._id,
+        type: formatTransactionType(transaction.transaction_type),
+        amount: formatAmount(transaction.amount),
+        date: formatDate(transaction.transaction_date || transaction.createdAt),
+        status: formatStatus(transaction.status),
+        // Keep original data for details view
+        originalData: transaction,
+      }
+    }) || []
+
+  // Handler for row clicks
+  const handleRowClick = (transaction) => {
+    setSelectedTransaction(transaction)
+    setOpenSideMenu(true)
+  }
 
   // Handler for closing the side sheet
   const handleCloseSideSheet = () => {
-    setOpenSideMenu(false);
-    setSelectedTransaction(null);
-  };
+    setOpenSideMenu(false)
+    setSelectedTransaction(null)
+  }
 
-// Transaction details component for the side sheet
-const TransactionDetails = ({ transaction }) => {
-  if (!transaction) return null;
+  // Custom cell renderer for status
+  const renderCustomCell = (key, value, item) => {
+    if (key === "status") {
+      const getStatusColor = (status) => {
+        switch (status?.toLowerCase()) {
+          case "completed":
+          case "success":
+            return "bg-green-100 text-green-800"
+          case "pending":
+            return "bg-yellow-100 text-yellow-800"
+          case "failed":
+          case "cancelled":
+            return "bg-red-100 text-red-800"
+          default:
+            return "bg-gray-100 text-gray-800"
+        }
+      }
 
-  // Helper function to format the amount
-  const formatAmount = (amount) => {
-    const numericAmount = parseFloat(amount.replace(/,/g, ''));
-    return new Intl.NumberFormat('en-NG', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(numericAmount);
-  };
+      return <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(value)}`}>{value}</span>
+    }
 
-  return (
-    <div className="space-y-8">
-      {/* Amount and Transaction Type Section */}
-      <div className="text-center space-y-2 pb-8 border-b">
-        <div className="text-4xl font-semibold">
-          <span className="text-gray-500">₦</span>
-          <span>{formatAmount(transaction.amount)}</span>
+    if (key === "amount") {
+      return <span className="font-medium">₦{value}</span>
+    }
+
+    return value
+  }
+
+  // Transaction details component for the side sheet
+  const TransactionDetails = ({ transaction }) => {
+    if (!transaction) return null
+
+    const originalData = transaction.originalData
+
+    // Helper function to format the amount
+    const formatAmount = (amount) => {
+      return new Intl.NumberFormat("en-NG", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount)
+    }
+
+    // Format full date
+    const formatFullDate = (dateString) => {
+      const date = new Date(dateString)
+      return date.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    }
+
+    return (
+      <div className="space-y-8">
+        {/* Amount and Transaction Type Section */}
+        <div className="text-center space-y-2 pb-8 border-b">
+          <div className="text-4xl font-semibold">
+            <span className="text-gray-500">₦</span>
+            <span>{formatAmount(originalData.amount)}</span>
+          </div>
+          <div className="text-gray-600">
+            {transaction.type} <span className="text-blue-500">#{transaction.id}</span>
+          </div>
         </div>
-        <div className="text-gray-600">
-          {transaction.type}{' '}
-          <span className="text-blue-500">#{transaction.id}</span>
+
+        {/* Transaction Details Grid */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500">Status</span>
+            <span
+              className={`font-medium ${
+                originalData.status?.toLowerCase() === "completed"
+                  ? "text-green-500"
+                  : originalData.status?.toLowerCase() === "pending"
+                    ? "text-yellow-500"
+                    : "text-red-500"
+              }`}
+            >
+              {originalData.status || "Pending"}
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500">Transaction ID</span>
+            <span className="font-medium">#{transaction.id}</span>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500">Reference</span>
+            <span className="font-medium">{originalData.reference || "N/A"}</span>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500">Transaction type</span>
+            <span className="font-medium">{transaction.type}</span>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500">Date</span>
+            <span className="font-medium">
+              {formatFullDate(originalData.transaction_date || originalData.createdAt)}
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500">Amount</span>
+            <span className="text-blue-500 font-medium">₦ {formatAmount(originalData.amount)}</span>
+          </div>
+
+          {originalData.updatedAt && (
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500">Last Updated</span>
+              <span className="font-medium">{formatFullDate(originalData.updatedAt)}</span>
+            </div>
+          )}
         </div>
       </div>
+    )
+  }
 
-      {/* Transaction Details Grid */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <span className="text-gray-500">Status</span>
-          <span className="text-green-500 font-medium">Successful</span>
-        </div>
+  const handleTransferModal = useCallback(() => {
+    // Mock user data (replace with API call later)
+    const mockUserLookup = (phone) => {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({
+            name: "John Doe Samuel",
+            phoneNumber: phone,
+          })
+        }, 500)
+      })
+    }
 
-        <div className="flex justify-between items-center">
-          <span className="text-gray-500">Transaction ID</span>
-          <span className="font-medium">#{transaction.id}</span>
-        </div>
+    const handleContinue = async (phoneNumber) => {
+      const userData = await mockUserLookup(phoneNumber)
+      closeModal()
 
-        <div className="flex justify-between items-center">
-          <span className="text-gray-500">Transaction type</span>
-          <span className="font-medium">{transaction.type}</span>
-        </div>
+      const handleConfirm = (amount) => {
+        console.log("Transfer confirmed", { amount, userData })
+        openModal({
+          title: "Transfer completed Successfully",
+          icon: <img src="Illustration.png" />,
+          content: (
+            <div>
+              <p className="text-sm">
+                Your transfer to <span className="text-blue-300">John Doe Samuel</span>(0810000000) was completed
+                successfully.
+              </p>
+            </div>
+          ),
+          buttons: [
+            {
+              label: "Continue",
+              primary: true,
+              onClick: closeModal(),
+            },
+          ],
+        })
+      }
 
-        <div className="flex justify-between items-center">
-          <span className="text-gray-500">Date</span>
-          <span className="font-medium">{transaction.date}</span>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <span className="text-gray-500">Duration</span>
-          <span className="font-medium">20 mins</span>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <span className="text-gray-500">Fee</span>
-          <span className="text-blue-500 font-medium">₦ 3,400</span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-
-const handleTransferModal = useCallback(() => {
-  // Mock user data (replace with API call later)
-  const mockUserLookup = (phone) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          name: "John Doe Samuel",
-          phoneNumber: phone
-        });
-      }, 500);
-    });
-  };
-
-  const handleContinue = async (phoneNumber) => {
-    const userData = await mockUserLookup(phoneNumber);
-    closeModal();
-    
-    const handleConfirm = (amount) => {
-      console.log('Transfer confirmed', { amount, userData });
       openModal({
-        title: 'Transfer completed Successfully',
-        icon: <img src='Illustration.png'/>,
+        title: "Transfer to others",
+        content: <AmountForm userData={userData} onConfirm={handleConfirm} />,
+      })
+    }
+
+    setOpenSideMenu(false)
+    openModal({
+      title: "Transfer to others",
+      content: <TransferForm onContinue={handleContinue} />,
+    })
+  }, [openModal, closeModal])
+
+  const handleFundWalletModal = useCallback(() => {
+    const handleContinue = (amount) => {
+      // Here you would integrate with Paystack
+      console.log("Processing payment for:", amount)
+
+      // After successful payment, show success modal
+      openModal({
+        title: "Payment Successful",
+        icon: <img src="Illustration.png" alt="Success" />,
         content: (
           <div>
-            <p className='text-sm'>Your transfer to <span className='text-blue-300'>John Doe Samuel</span>(0810000000) was completed successfully.</p>
+            <p className="text-sm">
+              Your wallet has been funded with <span className="text-blue-300">₦{amount}</span> successfully.
+            </p>
           </div>
         ),
         buttons: [
           {
-            label: 'Continue',
+            label: "Continue",
             primary: true,
-            onClick: closeModal(),
+            onClick: closeModal,
           },
-        ]
-      });
-    };
+        ],
+      })
+    }
 
     openModal({
-      title: "Transfer to others",
-      content: <AmountForm userData={userData} onConfirm={handleConfirm} />,
-    });
-  };
-
-  setOpenSideMenu(false);
-  openModal({
-    title: "Transfer to others",
-    content: <TransferForm onContinue={handleContinue} />,
-  });
-}, [openModal, closeModal]);
-
-
-const handleFundWalletModal = useCallback(() => {
-  const handleContinue = (amount) => {
-    // Here you would integrate with Paystack
-    console.log('Processing payment for:', amount);
-    
-    // After successful payment, show success modal
-    openModal({
-      title: 'Payment Successful',
-      icon: <img src='Illustration.png' alt="Success" />,
+      title: "Fund wallet",
       content: (
         <div>
-          <p className='text-sm'>Your wallet has been funded with <span className='text-blue-300'>₦{amount}</span> successfully.</p>
+          <p className="text-sm text-gray-500 mb-4">
+            Kindly input the amount you'd like to fund your wallet with, you'll be redirected to paystack to complete
+            your transaction.
+          </p>
+          <FundWalletForm onContinue={handleContinue} />
         </div>
       ),
-      buttons: [
-        {
-          label: 'Continue',
-          primary: true,
-          onClick: closeModal,
-        },
-      ]
-    });
-  };
+    })
+  }, [openModal, closeModal])
 
-  openModal({
-    title: "Fund wallet",
-    content: (
-      <div>
-        <p className="text-sm text-gray-500 mb-4">
-          Kindly input the amount you'd like to fund your wallet with,
-          you'll be redirected to paystack to complete your transaction.
-        </p>
-        <FundWalletForm onContinue={handleContinue} />
-      </div>
-    ),
-  });
-}, [openModal, closeModal]);
+  // Loading state
+  if (isLoading) {
+    return (
+      <AppLayout title={"Wallet"} icon={<WalletIcon />}>
+        <div className="p-6 space-y-2">
+          <div className="flex flex-col md:flex-row gap-3">
+            <CardComponent
+              title="Wallet balance"
+              subtitle={loading ? "Loading..." : `₦${user?.wallet}.00`}
+              variant="blue"
+              content={
+                <div className="flex space-x-2 p-1 w-full mt-16">
+                  <ButtonComponent
+                    onClick={handleFundWalletModal}
+                    buttonStyles="sm:w-72"
+                    label={"Add fund"}
+                    icon={<Wallet2Icon size={18} />}
+                    variant="primary"
+                  />
+                  <ButtonComponent
+                    onClick={handleTransferModal}
+                    buttonStyles="sm:w-72"
+                    label={"Transfer to others"}
+                    icon={<ArrowUpRightIcon size={18} />}
+                    variant="primary"
+                  />
+                </div>
+              }
+              className="flex-1"
+            />
+            <CardComponent title="Payment Methods" content={content} className="flex-1" />
+          </div>
+          <div className="p-4 border space-y-2 shadow-sm">
+            <p className="text-base font-medium">Transactions</p>
+            <div className="flex justify-center items-center py-8">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              <span className="ml-2 text-gray-600">Loading transactions...</span>
+            </div>
+          </div>
+        </div>
+      </AppLayout>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <AppLayout title={"Wallet"} icon={<WalletIcon />}>
+        <div className="p-6 space-y-2">
+          <div className="flex flex-col md:flex-row gap-3">
+            <CardComponent
+              title="Wallet balance"
+              subtitle={loading ? "Error" : `₦${user?.wallet}.00`}
+              variant="blue"
+              content={
+                <div className="flex space-x-2 p-1 w-full mt-16">
+                  <ButtonComponent
+                    onClick={handleFundWalletModal}
+                    buttonStyles="sm:w-72"
+                    label={"Add fund"}
+                    icon={<Wallet2Icon size={18} />}
+                    variant="primary"
+                  />
+                  <ButtonComponent
+                    onClick={handleTransferModal}
+                    buttonStyles="sm:w-72"
+                    label={"Transfer to others"}
+                    icon={<ArrowUpRightIcon size={18} />}
+                    variant="primary"
+                  />
+                </div>
+              }
+              className="flex-1"
+            />
+            <CardComponent title="Payment Methods" content={content} className="flex-1" />
+          </div>
+          <div className="p-4 border space-y-2 shadow-sm">
+            <p className="text-base font-medium">Transactions</p>
+            <div className="text-center py-8">
+              <p className="text-red-600 mb-4">Failed to load transactions</p>
+              <ButtonComponent label="Retry" onClick={() => getWalletHistory()} variant="primary" />
+            </div>
+          </div>
+        </div>
+      </AppLayout>
+    )
+  }
 
   return (
     <AppLayout title={"Wallet"} icon={<WalletIcon />}>
-      <div className='p-6 space-y-2'>
-        <div className='flex flex-col md:flex-row gap-3'>
+      <div className="p-6 space-y-2">
+        <div className="flex flex-col md:flex-row gap-3">
           <CardComponent
-          title="Wallet balance"
-          subtitle={ loading ? 'XXXXX' : `₦${user?.wallet}.00`}
-          variant='blue'
-          content={
-            <div className='flex space-x-2 p-1 w-full mt-16'>
-              <ButtonComponent onClick={handleFundWalletModal} buttonStyles="sm:w-72" label={'Add fund'} icon={<Wallet2Icon size={18} />} variant='primary' />
-              <ButtonComponent onClick={handleTransferModal} buttonStyles="sm:w-72" label={'Transfer to others'} icon={<ArrowUpRightIcon size={18} />} variant='primary'/>
-            </div>
-          }
-          className="flex-1"
+            title="Wallet balance"
+            subtitle={loading ? "Loading..." : `₦${user?.wallet.toLocaleString("en-US")}.00`} 
+            variant="blue"
+            content={
+              <div className="flex space-x-2 p-1 w-full mt-16">
+                <ButtonComponent
+                  onClick={handleFundWalletModal}
+                  buttonStyles="sm:w-72"
+                  label={"Add fund"}
+                  icon={<Wallet2Icon size={18} />}
+                  variant="primary"
+                />
+                <ButtonComponent
+                  onClick={handleTransferModal}
+                  buttonStyles="sm:w-72"
+                  label={"Transfer to others"}
+                  icon={<ArrowUpRightIcon size={18} />}
+                  variant="primary"
+                />
+              </div>
+            }
+            className="flex-1"
           />
-          <CardComponent
-          title="Payment Methods"
-          content={content}
-          className='flex-1' />
+          <CardComponent title="Payment Methods" content={content} className="flex-1" />
         </div>
-        <div className='p-4 border space-y-2 shadow-sm'>
-          <p className='text-base font-medium'>Transactions</p>
-          <Table columns={columns} data={data} onRowClick={handleRowClick} />
+        <div className="p-4 border space-y-2 shadow-sm">
+          <div className="flex justify-between items-center">
+            <p className="text-base font-medium">Transactions</p>
+            <span className="text-sm text-gray-500">
+              {transformedTransactionData.length} transaction{transformedTransactionData.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+
+          {transformedTransactionData.length === 0 ? (
+            <div className="text-center py-8">
+              <WalletIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 mb-2">No transactions yet</p>
+              <p className="text-sm text-gray-500">Your transaction history will appear here</p>
+            </div>
+          ) : (
+            <Table
+              columns={columns}
+              data={transformedTransactionData}
+              onRowClick={handleRowClick}
+              renderCustomCell={renderCustomCell}
+            />
+          )}
         </div>
         {/* Side Sheet for Transaction Details */}
-        <SideSheet
-          isOpen={openSideMenu}
-          onClose={handleCloseSideSheet}
-          title="Transaction Details"
-        >
+        <SideSheet isOpen={openSideMenu} onClose={handleCloseSideSheet} title="Transaction Details">
           <TransactionDetails transaction={selectedTransaction} />
         </SideSheet>
       </div>

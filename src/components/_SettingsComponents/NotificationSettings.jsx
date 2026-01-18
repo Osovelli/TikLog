@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Loader2 } from 'lucide-react';
 import useNotificationStore from '@/store/notificationStore';
+import useAuthStore from '@/store/authStore';
 
 const NotificationItem = ({ title, description, enabled, onToggle, loading }) => {
   return (
@@ -32,7 +33,8 @@ export const NotificationSettings = () => {
   const [notifications, setNotifications] = useState({
     deals: true,
     system_update: true,
-    email_notification: false
+    email_notification: false,
+    delivery_updates: true,
   });
 
   // State for notification method (push/email/both)
@@ -46,9 +48,26 @@ export const NotificationSettings = () => {
   });
 
   const { updateNotificationPreference, notificationPreferences, getNotification, loading, error } = useNotificationStore();
+  const { user } = useAuthStore();
+
+  console.log("Notification Preferences from Store:", notificationPreferences);
+
+  useEffect(() => {
+    console.log("User notification preferences data changed:", user?.notificationPreference);
+    if (user) {
+      setNotifications({
+        deals: user?.notificationPreference?.deals,
+        system_update: user?.notificationPreference?.system_update,
+        email_notification: user?.notificationPreference?.email_notification,
+        delivery_updates: user?.notificationPreference?.deliveryUpdates,
+        update_system: user?.notificationPreference?.systemUpdate,
+      });
+    }
+  }, [user]);
+
 
   // Fetch initial notification preferences
-  useEffect(() => {
+  /* useEffect(() => {
     const fetchPreferences = async () => {
       try {
         await getNotification();
@@ -57,10 +76,10 @@ export const NotificationSettings = () => {
       }
     };
     fetchPreferences();
-  }, [getNotification]);
+  }, [getNotification]); */
 
   // Load initial preferences from store
-  useEffect(() => {
+  /* useEffect(() => {
     if (notificationPreferences) {
       setNotifications({
         deals: notificationPreferences.deals ?? true,
@@ -68,7 +87,7 @@ export const NotificationSettings = () => {
         email_notification: notificationPreferences.email_notification ?? false
       });
     }
-  }, [notificationPreferences]);
+  }, [notificationPreferences]); */
 
   const handleToggle = async (key) => {
     // Set loading state for this specific toggle
@@ -183,6 +202,17 @@ export const NotificationSettings = () => {
             onToggle={() => handleToggle('email_notification')}
             loading={loadingStates.email_notification}
           />
+
+          <Separator />
+
+          <NotificationItem
+            title="Delivery Updates"
+            description="Get notified about your delivery status and updates"
+            enabled={notifications.delivery_updates}
+            onToggle={() => handleToggle('delivery_updates')}
+            loading={loadingStates.delivery_updates}
+          />
+
         </div>
       </CardContent>
     </Card>

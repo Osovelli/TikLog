@@ -2,8 +2,10 @@ import { create } from "zustand";
 import { toast } from "react-hot-toast";
 import axiosInstance from "@/lib/utils/axiosInstance";
 
+
 const useAuthStore = create((set) => ({
   user: null,
+  walletDetails: null,
   token: null,
   adminData: null,
   isSignup: false,
@@ -14,10 +16,10 @@ const useAuthStore = create((set) => ({
   error: null,
   showErrorModal: false,
 
-  login: async ({phone_number, password}) => {
+  login: async ({phone, password}) => {
     set({ loading: true, error: null });
     try {
-      const response = await axiosInstance.post('/auth/user', { phone_number, password });
+      const response = await axiosInstance.post('/auth/customer/login', { phone, password });
       const token  = response.data?.data?.token;
       const user = response.data?.data;
       console.log("LOGIN token", response);
@@ -32,13 +34,32 @@ const useAuthStore = create((set) => ({
     }
   },
 
-  forgotPassword: async ({phone_number}) => {
+  resetPassword: async ({ email, newPassword }) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await axiosInstance.post('/auth/customer/reset-password', {
+        email,
+        newPassword
+      });
+      console.log("Reset Password Response", response)
+      toast.success(response.data.message);
+      return response;
+    } catch (error) {
+      console.error("Reset Password failed", error);
+      toast.error(error.response.data.message)
+      set({ loading: false, error: 'Reset Password failed.'})
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  forgotPassword: async ({email}) => {
 		set({ loading: true });
 
 		try {
-			const res = await axiosInstance.post("/auth/user/forgot", { phone_number  });
+			const res = await axiosInstance.post("/auth/customer/forgot-password", { email });
 			set({  loading: false, sendToken: true  });
-			console.log("Token result data", res)
 			toast.success(res.data.message);
 			return res;
 		} catch (error) {
@@ -48,13 +69,13 @@ const useAuthStore = create((set) => ({
 		}
 	},
 
-	changePassword: async ({ otp, new_password, confirm_password }) => {
+	changePassword: async ({ currentPassword, newPassword, confirmPassword }) => {
     set({ loading: true, error: null });
     try {
-      const response = await axiosInstance.post('/auth/user/reset_password', {
-        otp,
-        new_password,
-        confirm_password
+      const response = await axiosInstance.post('/auth/customer/change-password', {
+        currentPassword,
+        newPassword,
+        confirmPassword
       });
       console.log("Reset Password Response", response)
       toast.success(response.data.message);
@@ -69,30 +90,30 @@ const useAuthStore = create((set) => ({
     }
   },
 
-  resendOtp: async ({email, id, firstname}) => {
+  verifyResetOtp: async ({email, otp}) => {
     set({ loading: true, error: null });
     try {
-      const response = await axiosInstance.post('/auth/user/resend_otp', {email, id, firstname});
-      console.log("Resend OTP Response", response)
-      toast.success("Otp sent successfully");
-      return response.data;
+      const response = await axiosInstance.post('auth/customer/verify-reset-otp', {email, otp});
+      console.log("OTP Verification Response", response)
+      toast.success("Reset OTP verified successfully");
+      return response;
     } catch (error) {
-      console.error("Resend OTP failed", error);
+      console.error("Verify OTP failed", error);
       toast.error(error.response.data.message)
-      set({ loading: false, error: 'Resend OTP failed.'})
+      set({ loading: false, error: 'Verify OTP failed.'})
       throw error;
     } finally {
       set({ loading: false });
     }
   },
 
-  signup: async ({ email, phone_number, country_code, password }) => {
+  signup: async ({ email, phone, code, password }) => {
     set({ loading: true, error: null });
     try {
-      const response = await axiosInstance.post('/user/create', {
+      const response = await axiosInstance.post('/auth/customer/register', {
         email,
-        phone_number,
-        country_code,
+        phone,
+        code,
         password
       });
       toast.success("Signup successful");
@@ -108,17 +129,17 @@ const useAuthStore = create((set) => ({
     }
   },
 
-  verifyOtp: async ({ otp }) => {
+  verifyOtp: async ({ email, otp }) => {
     set({ loading: true, error: null });
     try {
-      const response = await axiosInstance.post('/user/verify_otp', {
+      const response = await axiosInstance.post('/auth/customer/verify-otp', {
+        email,
         otp
       });
       toast.success("otp verified");
       set({ isOtp: true, loading: false })
-      localStorage.setItem('accessToken', response.data.data.accessToken);
-      localStorage.setItem('refreshToken', response.data.data.refreshToken);
-      console.log("OTP RESPONSE", response)
+      sessionStorage.setItem('accessToken', response.data?.data?.token);
+      //localStorage.setItem('refreshToken', response.data.data.refreshToken);
       /* return { success: true, data: response.data }; */
     } catch (error) {
       console.error("OTP failed", error);
@@ -129,36 +150,63 @@ const useAuthStore = create((set) => ({
     }
   },
 
-  getToKnow: async ({ firstname, lastname, othername, dob, isOnboarded, }) => {
-    set({ loading: true, error: null });
-    try {
-      const response = await axiosInstance.put('/user/onboarding', {
-        firstname,
-        lastname,
-        othername,
-        isOnboarded,
-        dob,
-      });
-      toast.success("Profile updated successfully");
-      set({ isProfileComplete: true, loading: false })
-      console.log("Profile data: ", response)
-      /* return { success: true, data: response.data }; */
-    } catch (error) {
-      console.error("Proile submission failed", error);
-      const errorMessage = error.response?.data?.message || "submission failed. Please try again.";
-      toast.error(errorMessage);
-      set({ loading: false, error: errorMessage, showErrorModal: true });
-      /* return { success: false, error: errorMessage }; */
+// Updated getToKnow function for authStore
+
+getToKnow: async ({ profileImage, firstname, lastname, othername, email, dob, referralCode }) => {
+  set({ loading: true, error: null });
+
+  try {
+    // Prepare the payload
+    const payload = {
+      firstname,
+      lastname,
+      othername: othername || '',
+      email: email || '',
+      dob,
+      referralCode: referralCode || '',
     }
-  },
+
+    // Add profile image if provided
+    if (profileImage) {
+      payload.profileImage = {
+        url: profileImage.url,
+        publicId: profileImage.publicId,
+      }
+    }
+
+    console.log('Sending to API:', payload)
+
+    const response = await axiosInstance.put('/onboarding/customer/profile-onboard', payload);
+    
+    toast.success("Profile updated successfully");
+    set({ 
+      isProfileComplete: true, 
+      loading: false,
+      user: response.data?.data?.user || null 
+    })
+    
+    console.log("Profile data: ", response.data)
+    return { success: true, data: response.data }
+  } catch (error) {
+    console.error("Profile submission failed", error);
+    const errorMessage = error.response?.data?.message || "Submission failed. Please try again.";
+    toast.error(errorMessage);
+    set({ 
+      loading: false, 
+      error: errorMessage, 
+      showErrorModal: true 
+    });
+    return { success: false, error: errorMessage }
+  }
+},
 
   getMe: async () => {
     set({ loading: true });
     try {
-      const res = await axiosInstance.get('/user/me');
+      const res = await axiosInstance.get('/onboarding/customer/profile');
       console.log("GET ME RESPONSE", res.data)
-      set({  loading: false,  user: res.data?.data});
-      console.log("single client result", res.data?.data)
+      set({  loading: false,  user: res.data?.data?.profile, walletDetails: res.data?.data?.wallet  });
+      //console.log("single client result", res.data?.data)
     } catch (error) {
       set({ error: error.response?.data?.message || "Error Fetching User", loading: false });
       console.log(error);
@@ -166,19 +214,19 @@ const useAuthStore = create((set) => ({
     }
   },
 
-  updateUser: async ({ firstname, lastname, othername, dob, isOnboarded, }) => {
+  updateUser: async ({ firstname, lastname, othername, dob, profileImage, isOnboarded, }) => {
     set({ loading: true, error: null, isProfileComplete: false });
     try {
-      const response = await axiosInstance.put('/user/update', {
+      const response = await axiosInstance.put('/customer/profile', {
         firstname,
         lastname,
         othername,
+        profileImage,
         isOnboarded,
         dob,
       });
       toast.success("Profile updated successfully");
-      set({ isProfileComplete: true, loading: false })
-      console.log("Profile data: ", response)
+      set({ isProfileComplete: true, user: response.data?.data?.user, loading: false });
       /* return { success: true, data: response.data }; */
     } catch (error) {
       console.error("Proile submission failed", error);

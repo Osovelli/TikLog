@@ -67,7 +67,7 @@ export const LoginPage = () => {
     if (!validateForm()) return;
     console.log({email: formData.phoneNumber, password: formData.password})
     login({
-      phone_number: formData.phoneNumber,
+      phone: formData.phoneNumber,
       password: formData.password
     })
 

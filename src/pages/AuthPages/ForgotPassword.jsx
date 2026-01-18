@@ -40,7 +40,8 @@ import { Link, useNavigate } from 'react-router-dom'
 export const ForgotPassword = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    phone_number: ''
+    phone_number: '',
+    email: ''
   });
 
   const {forgotPassword, loading} = useAuthStore();
@@ -48,14 +49,15 @@ export const ForgotPassword = () => {
   const handleChange = (e) => {
     setFormData(() => ({
       /* ...prev, */
-      phone_number: e.target.value
+      ...formData, 
+      email: e.target.value
     }))
   }
 
   const handleContinue = async() => {
     console.log("PHonE", formData.phone_number);
     try {
-      const res = await forgotPassword({phone_number: formData.phone_number});
+      const res = await forgotPassword({email: formData.email});
       if (res.status === 200) {
         navigate('/reset-password-otp', {
           state: {
@@ -77,11 +79,19 @@ export const ForgotPassword = () => {
     description='Enter your phone number to continue'
     >
       {/* <PhoneInput /> */}
-      <InputComponent
+      {/* <InputComponent
         value={formData.phone_number}
         onChange={handleChange}
         placeholder="Phone number"
         type="tel"
+      /> */}
+
+      {/* email input */}
+      <InputComponent
+        value={formData.email}
+        onChange={handleChange}
+        placeholder="Email address"
+        type="email"
       />
       <ButtonComponent 
         variant="primary" 

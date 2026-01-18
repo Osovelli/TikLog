@@ -3,11 +3,11 @@ import { LoginPage } from './pages/AuthPages/LoginPage';
 import { Signup } from './pages/AuthPages/Signup';
 import { ForgotPassword} from './pages/AuthPages/ForgotPassword';
 import { ResetPasswordOtp } from './pages/AuthPages/ResetPasswordOtp';
-import { ResetPassword } from './pages/AuthPages/ResetPassword';
+import { ChangePassword } from './pages/AuthPages/ChangePassword';
 import { ResetPasswordSuccess } from './pages/AuthPages/ResetPasswordSuccess';
 import { SignUpSuccess } from './pages/AuthPages/SignupSuccess';
 import { SignUpOTP } from './pages/AuthPages/SignupOtp';
-import { GetToKnowUser } from './pages/AuthPages/SignUpComplete';
+import { GetToKnowUser } from './pages/AuthPages/GetToKnowUser';
 import { HomePage } from './pages/HomePage';
 import { DeliveryPage } from './pages/DeliveryPage';
 import { MyDeliveries } from './pages/MyDeliveries';
@@ -20,6 +20,7 @@ import { jwtDecode } from 'jwt-decode';
 import { StatisticsPage } from './pages/StatisticsPage';
 import NotFound from './pages/NotFound';
 import ReferralPage from './pages/ReferralPage';
+import { ResetPassword } from './pages/AuthPages/ResetPassword';
 
 
 function App() {
@@ -33,11 +34,13 @@ function App() {
             const decoded = jwtDecode(token);
             // Check if token is expired
             if (decoded.exp * 1000 < Date.now()) {
-                localStorage.removeItem('accessToken');
+                //localStorage.removeItem('accessToken');
+                sessionStorage.removeItem('accessToken');
                 return <Navigate to='/signin' replace />;
             }
         } catch (e) {
-            localStorage.removeItem('accessToken');
+            //localStorage.removeItem('accessToken');
+            sessionStorage.removeItem('accessToken');
             return <Navigate to='/signin' replace />;
         }
 
@@ -65,6 +68,7 @@ function App() {
                     </RedirectAuthenticatedUser>
                     } />
                 <Route path='/forgot-password' element={<ForgotPassword />} />
+                <Route path='/change-password' element={<ChangePassword />} />
                 <Route path='/reset-password' element={<ResetPassword />} />
                 <Route path='/reset-password/success' element={<ResetPasswordSuccess />} />
                 <Route path='/reset-password-otp' element={<ResetPasswordOtp />} />

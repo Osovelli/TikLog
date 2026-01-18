@@ -21,7 +21,7 @@ const SidebarItem = ({ icon, text, routeName}) => {
 
 export const Sidebar = ({ isOpen, toggleSidebar }) => {
   const [isMobile, setIsMobile] = useState(false)
- /*  const [user, setUser] = useState({}) */
+  //const [userProfile, setUserProfile] = useState(null)
   const { getMe, user, loading, isProfileComplete } = useAuthStore()
 
   useEffect(() => {
@@ -37,9 +37,9 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   useEffect(() => {
     getMe()
-  }, [isProfileComplete])
+    //setUserProfile(user)
+  }, [])
 
-  console.log("USER", user)
 
   return (
     <>
@@ -76,8 +76,9 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
             //name={user?.firstname + " " + user?.lastname}
             name={`${user?.firstname} ${user?.lastname}`}
             phoneNumber={user?.phone_number}
-            avatarUrl="Avatar1.png"
+            avatarUrl={user?.profileImage?.url}
             isVerified={user?.is_accepted}
+            loading={loading}
           />
         </div>
       </div>

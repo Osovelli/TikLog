@@ -13,7 +13,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import useAuthStore from '@/store/authStore'
 
 
-export const SidebarProfile = ({ name, phoneNumber, avatarUrl, isVerified = false }) => {
+export const SidebarProfile = ({ name, phoneNumber, avatarUrl, isVerified = false, loading }) => {
   const { logout } = useAuthStore()
   const navigate = useNavigate()
 
@@ -33,10 +33,17 @@ export const SidebarProfile = ({ name, phoneNumber, avatarUrl, isVerified = fals
           <CheckCircle2 className="absolute top-0 right-0 h-4 w-4 bg-blue-500 text-white rounded-full" />
         )}
       </div>
-      <div className="flex-grow min-w-0">
-        <p className="text-sm font-medium text-gray-900 truncate">{name}</p>
-        <p className="text-sm text-gray-500 truncate">{phoneNumber}</p>
-      </div>
+      {loading ? (
+        <div className="flex-grow min-w-0">
+          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
+          <div className="h-4 bg-gray-200 rounded w-2/4 animate-pulse"></div>
+        </div>
+      ) : (
+        <div className="flex-grow min-w-0">
+          <p className="text-sm font-medium text-gray-900 truncate">{name}</p>
+          <p className="text-sm text-gray-500 truncate">{phoneNumber}</p>
+        </div>
+      )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">

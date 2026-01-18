@@ -6,6 +6,7 @@ const useNotificationStore = create((set) => ({
     loading: false,
     error: null,
     notifications: null,
+    notificationPreferences: null,
     showErrorModal: false,
 
     getNotifications: async () => {
@@ -34,8 +35,9 @@ const useNotificationStore = create((set) => ({
     updateNotificationPreference: async ( preference) => {
         set({ loading: true, error: null });
         try {
-            const response = await axiosInstance.put('/notification/update', { preference });
-            console.log("Notification preference updated:", response.data);
+            const response = await axiosInstance.put('/customer/notifications', { preference });
+            set({ notificationPreferences: response?.data?.data });
+            console.log("Notification preference updated successfully:", response.data);
             toast.success("Notification preference updated successfully!");
             set({ loading: false });
             return response.data;

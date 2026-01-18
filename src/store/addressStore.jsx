@@ -11,7 +11,7 @@ const useAddressStore = create((set) => ({
   postAddress: async ({street, city, state, postal_code, longitude, latitude }) => {
     set({ loading: true, error: null });
     try {
-      const response = await axiosInstance.post('/address', { street, city, state, postal_code, longitude, latitude });
+      const response = await axiosInstance.post('/onboarding/customer/address', { street, city, state, postal_code, longitude, latitude });
       toast.success("Address added successfully");
       console.log("ADDRESS RESPONSE", response)
       /* const address = response.data?.data;

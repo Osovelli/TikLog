@@ -57,8 +57,8 @@ export const Signup = () => {
 
      signup({
       email: formData.email,
-      phone_number: formData.phoneNumber,
-      country_code: formData.countryCode,
+      phone: formData.phoneNumber,
+      code: formData.countryCode,
       password: formData.password
     })
 
@@ -99,7 +99,7 @@ export const Signup = () => {
   useEffect(() => {
     if(isSignup){
       //toast.success("Signup successful");
-      navigate("/signup-otp")
+      navigate("/signup-otp", {state: {email: formData.email }})
     }
     },[isSignup]
   )

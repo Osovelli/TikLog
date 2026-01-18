@@ -4,25 +4,26 @@ import { useEffect } from "react";
 
 
 export const WalletCard = (data) => {
-  const {user} = useAuthStore();
+  const {walletDetails} = useAuthStore();
+
+  console.log("WALLET DETAILS IN WALLET CARD", walletDetails);
 
   useEffect(() => {
-    if (!user) {
-      console.error("User data is not available");
+    if (!walletDetails) {
+      console.error("Wallet details are not available");
     }
-    user && console.log("User data:", user);
-  }, [user]);
-
+    walletDetails && console.log("Wallet details:", walletDetails);
+  }, [walletDetails]);
   // Format walletBalance with commas for every three digits
-  const formattedWalletBalance = user?.wallet
-    ? user?.wallet.toLocaleString("en-US")
+  const formattedWalletBalance = walletDetails?.balance
+    ? walletDetails?.balance.toLocaleString("en-US")
     : "0";
 
     return (
       <CardComponent
         title="Wallet"
         action="Fund wallet"
-        content={<p className="text-3xl font-bold mt-2">NGN {formattedWalletBalance}.00</p>}
+        content={<p className="text-3xl font-bold mt-2">{walletDetails?.currency} {formattedWalletBalance}.00</p>}
         className="mb-6"
       />
     );

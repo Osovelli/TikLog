@@ -7,8 +7,10 @@ import {
 } from "@/components/ui/input-otp"
 import { ButtonComponent } from '../ButtonComponent';
 import { useNavigate } from 'react-router';
+import useAuthStore from '@/store/authStore';
 
-export default function OTPWithCountdown({otp, setOtp, handleContinue}) {
+export default function OTPWithCountdown({otp, setOtp, handleContinue, email}) {
+  const {resendOtp} = useAuthStore()
   const [timer, setTimer] = useState(90); // 90 seconds = 1:30
   const [isDisabled, setIsDisabled] = useState(false);
 
@@ -36,11 +38,16 @@ export default function OTPWithCountdown({otp, setOtp, handleContinue}) {
     return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
   };
 
-  const handleResend = () => {
-    setTimer(90);
+  const handleResend = async() => {
+    console.log("resending otp", {email, otp})
+    setTimer(360);
     setIsDisabled(false);
     setOtp("");
     // Add your resend logic here
+    await resendOtp({
+      email: email,
+      otp: otp
+    })
   };
 
   return (

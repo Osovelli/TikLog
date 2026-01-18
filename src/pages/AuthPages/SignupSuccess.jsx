@@ -15,7 +15,7 @@ export const SignUpSuccess = () => {
     description="Your account has been successfully created. You're now ready to send packages of any size, safely and in real-time, to your desired location."
     
     >
-      <ButtonComponent variant="primary" label={'Login'} buttonStyles='h-[52px] w-full' onClick={() => navigate('/signin')}  />
+      <ButtonComponent variant="primary" label={'Login'} buttonStyles='h-[52px] w-full' onClick={() => navigate('/')}  />
     </AuthLayout>
     </>
   )

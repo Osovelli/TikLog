@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { ButtonComponent } from '../ButtonComponent';
 import { useModal } from '@/lib/ModalContext';
 import ChangePasswordForm from './ChangePasswordForm';
+import useAuthStore from '@/store/authStore';
 
 
 const NotificationItem = ({ title, description, enabled, onToggle }) => {
@@ -28,8 +29,112 @@ export const SecuritySettings = () => {
   const [notifications, setNotifications] = useState({
     fingerprint: false,
   });
-
+  const [isLoading, setIsLoading] = useState(false)
   const {openModal, closeModal} = useModal()
+  const {changePassword, loading, error} = useAuthStore()
+
+  const handlePasswordSubmit = async (formData) => {
+    const { currentPassword, newPassword, confirmPassword } = formData
+
+    // Validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      openModal({
+        title: "Validation Error",
+        content: (
+          <div className="text-center py-4">
+            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <p className="text-gray-600">Please fill in all password fields.</p>
+          </div>
+        ),
+        buttons: [{ label: "OK", onClick: closeModal, primary: true }],
+      })
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      openModal({
+        title: "Password Mismatch",
+        content: (
+          <div className="text-center py-4">
+            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <p className="text-gray-600">New password and confirm password do not match.</p>
+          </div>
+        ),
+        buttons: [{ label: "OK", onClick: closeModal, primary: true }],
+      })
+      return
+    }
+
+    if (newPassword.length < 6) {
+      openModal({
+        title: "Password Too Short",
+        content: (
+          <div className="text-center py-4">
+            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <p className="text-gray-600">New password must be at least 6 characters long.</p>
+          </div>
+        ),
+        buttons: [{ label: "OK", onClick: closeModal, primary: true }],
+      })
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      // Call the change password API
+      const response = await changePassword({
+        currentPassword,
+        newPassword,
+        confirmPassword
+      })
+
+
+      setIsLoading(false)
+      closeModal()
+
+      // Show success modal
+      setTimeout(() => {
+        openModal({
+          title: "Password Changed Successfully",
+          content: (
+            <div className="text-center py-6">
+              <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
+              <p className="text-gray-600 mb-4">Your password has been updated successfully.</p>
+              <p className="text-sm text-gray-500">Please use your new password for future logins.</p>
+            </div>
+          ),
+          buttons: [{ label: "OK", onClick: closeModal, primary: true }],
+        })
+      }, 300)
+    } catch (error) {
+      setIsLoading(false)
+      console.error("Password change error:", error)
+
+      // Show error modal
+      openModal({
+        title: "Password Change Failed",
+        content: (
+          <div className="text-center py-4">
+            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <p className="text-gray-600 mb-4">Failed to change password. Please try again.</p>
+            <p className="text-sm text-gray-500">{error.message || "An unexpected error occurred"}</p>
+          </div>
+        ),
+        buttons: [
+          { label: "Cancel", onClick: closeModal },
+          {
+            label: "Try Again",
+            onClick: () => {
+              closeModal()
+              setTimeout(() => handleOpenChangePasswordModal(), 300)
+            },
+            primary: true,
+          },
+        ],
+      })
+    }
+  }
 
   const handleToggle = (key) => {
     setNotifications(prev => ({
@@ -40,6 +145,30 @@ export const SecuritySettings = () => {
 
   const handleOpenChangePasswordModal = () => {
    /*  send api here */
+    openModal({
+      title: 'Change Password',
+      content: <ChangePasswordForm onClose={closeModal} onSubmit={handlePasswordSubmit} />,
+      size: 'sm',
+      buttons: [
+        {
+          label: "Cancel",
+          onClick: closeModal,
+          disabled: isLoading,
+        },
+        {
+          label: isLoading ? "Changing..." : "Change Password",
+          onClick: () => {
+            // The form submission is handled by the ChangePasswordForm component
+            const form = document.querySelector("form")
+            if (form) {
+              form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }))
+            }
+          },
+          primary: true,
+          disabled: isLoading,
+        },
+      ],
+    });
   }
 
 

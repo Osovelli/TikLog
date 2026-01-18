@@ -38,7 +38,7 @@ export const ResetPasswordOtp = ({ onSuccess, onBack }) => {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
 
-  const { changePassword, resendOtp, loading } = useAuthStore()
+  const { changePassword, verifyResetOtp, loading } = useAuthStore()
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -157,9 +157,9 @@ export const ResetPasswordOtp = ({ onSuccess, onBack }) => {
     e.preventDefault()
 
     // Clear previous errors
-    setError("")
+    /* setError("")
     setPasswordError("")
-    setConfirmPasswordError("")
+    setConfirmPasswordError("") */
 
     // Validate form
     /* if (!validateForm()) {
@@ -169,8 +169,9 @@ export const ResetPasswordOtp = ({ onSuccess, onBack }) => {
     // Construct request body
     const requestBody = {
       otp: otp,
-      new_password: newPassword,
-      confirm_password: confirmPassword,
+      email: email,
+      /* new_password: newPassword,
+      confirm_password: confirmPassword, */
     }
 
     console.log("Reset password request body:", requestBody)
@@ -178,9 +179,13 @@ export const ResetPasswordOtp = ({ onSuccess, onBack }) => {
     try {
       setIsLoading(true)
       
-      const res = await changePassword(requestBody)
-      if (res.status === "success") {
-        navigate('/reset-password/success')
+      const res = await verifyResetOtp(requestBody)
+      if (res && res.status === 200) {
+        navigate('/reset-password', {
+          state: {
+            email: email,
+          },
+        });
       }
     }
     catch (error) {
@@ -214,7 +219,7 @@ export const ResetPasswordOtp = ({ onSuccess, onBack }) => {
           </div>
 
           {/* New Password Input */}
-          <InputComponent
+          {/* <InputComponent
             id="new_password"
             name="new_password"
             type="password"
@@ -226,10 +231,10 @@ export const ResetPasswordOtp = ({ onSuccess, onBack }) => {
             error={passwordError}
             disabled={isLoading}
             required
-          />
+          /> */}
 
           {/* Confirm Password Input */}
-          <InputComponent
+          {/* <InputComponent
             id="confirm_password"
             name="confirm_password"
             type="password"
@@ -241,34 +246,35 @@ export const ResetPasswordOtp = ({ onSuccess, onBack }) => {
             error={confirmPasswordError}
             disabled={isLoading}
             required
-          />
+          /> */}
 
           {/* Password Requirements */}
-          <div className="text-sm text-gray-600 space-y-1">
+          {/* <div className="text-sm text-gray-600 space-y-1">
             <p className="font-medium">Password must contain:</p>
             <ul className="list-disc list-inside space-y-1 text-xs">
               <li>At least 8 characters</li>
-              {/* <li>One uppercase letter (A-Z)</li>
+              <li>One uppercase letter (A-Z)</li>
               <li>One lowercase letter (a-z)</li>
               <li>One number (0-9)</li>
-              <li>One special character (@$!%*?&)</li> */}
+              <li>One special character (@$!%*?&)</li>
             </ul>
-          </div>
+          </div> */}
 
           {/* Error Alert */}
-          {error && (
+          {/* {error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
-          )}
+          )} */}
 
           {/* Submit Button */}
           <Button
             type="submit"
             className="w-full h-12 bg-[#1F1F76] hover:bg-[#1a1a66]"
             onClick={handleSubmit}
-            disabled={isLoading || !otp || !newPassword || !confirmPassword || passwordError || confirmPasswordError}
+            disabled={isLoading}
+            //disabled={isLoading || !otp || !newPassword || !confirmPassword || passwordError || confirmPasswordError}
           >
             {isLoading ? (
               <>
