@@ -11,7 +11,7 @@ import { GetToKnowUser } from './pages/AuthPages/GetToKnowUser';
 import { HomePage } from './pages/HomePage';
 import { DeliveryPage } from './pages/DeliveryPage';
 import { MyDeliveries } from './pages/MyDeliveries';
-import { Wallet } from './pages/WalletPage';
+import { WalletPage } from './pages/WalletPage';
 import { Profile } from './pages/Profile';
 import { Notification } from './pages/Notification';
 import { SettingsPage } from './pages/SettingsPage';
@@ -21,6 +21,7 @@ import { StatisticsPage } from './pages/StatisticsPage';
 import NotFound from './pages/NotFound';
 import ReferralPage from './pages/ReferralPage';
 import { ResetPassword } from './pages/AuthPages/ResetPassword';
+import { PaymentCallback } from './pages/PaymentCallback';
 
 
 function App() {
@@ -35,12 +36,12 @@ function App() {
             // Check if token is expired
             if (decoded.exp * 1000 < Date.now()) {
                 //localStorage.removeItem('accessToken');
-                sessionStorage.removeItem('accessToken');
+                localStorage.removeItem('accessToken');
                 return <Navigate to='/signin' replace />;
             }
         } catch (e) {
             //localStorage.removeItem('accessToken');
-            sessionStorage.removeItem('accessToken');
+            localStorage.removeItem('accessToken');
             return <Navigate to='/signin' replace />;
         }
 
@@ -92,7 +93,13 @@ function App() {
                 } />
                 <Route path='/wallet' element={
                     <ProtectedRoute>
-                        <Wallet />
+                        <WalletPage />
+                    </ProtectedRoute>
+                } />
+
+                <Route path="/payment/callback" element={
+                    <ProtectedRoute>
+                        <PaymentCallback />
                     </ProtectedRoute>
                 } />
                 <Route path='/profile' element={

@@ -28,6 +28,7 @@ export const GetToKnowUser = () => {
   const [avatarPreview, setAvatarPreview] = useState(null)
   const [uploadedImage, setUploadedImage] = useState(null) // Store uploaded image data
   const [imageUploading, setImageUploading] = useState(false)
+
   const fileInputRef = useRef(null)
 
   const handleChange = (name) => (value) => {

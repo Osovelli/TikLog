@@ -24,6 +24,10 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
   //const [userProfile, setUserProfile] = useState(null)
   const { getMe, user, loading, isProfileComplete } = useAuthStore()
 
+  console.log("User in sidebar", user)
+
+  
+
   useEffect(() => {
     const checkIsMobile = () => {
       setIsMobile(window.innerWidth < 768) // 768px is the 'md' breakpoint in Tailwind

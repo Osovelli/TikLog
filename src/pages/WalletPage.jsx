@@ -13,6 +13,7 @@ import useAuthStore from "@/store/authStore"
 import toast from "react-hot-toast"
 import { FaMoneyBill } from "react-icons/fa"
 import useWalletStore from "@/store/walletStore"
+import { get } from "react-hook-form"
 
 const paymentMethods = [
   {
@@ -44,31 +45,43 @@ const columns = [
   { key: "status", label: "Status" },
 ]
 
-export const Wallet = () => {
+export const WalletPage = () => {
   const [openSideMenu, setOpenSideMenu] = useState(false)
   const [selectedTransaction, setSelectedTransaction] = useState(null)
-
+  const { createDeposit, verifyDeposit } = useWalletStore()
   const { openModal, closeModal } = useModal()
-  const { user, loading } = useAuthStore()
-  const { getWalletHistory, walletHistory, isLoading, error } = useWalletStore()
+  const { getMe, loading } = useAuthStore() 
+  const { getWalletHistory, walletHistory, getUserWalletDetails, walletDetails, loading: walletLoading, error } = useWalletStore()
+
+  const walletBalance = walletDetails?.balance || 0
+
+  /* useEffect(() => {
+    getMe()
+  }, [getMe])
+
+  console.log("WALLET DETAILS", walletDetails) */
+
 
   useEffect(() => {
-    if (user?.wallet == 0) {
+    //getWalletHistory()
+    getUserWalletDetails()
+  }, [getUserWalletDetails])
+
+  console.log("WALLET DETAILS", walletDetails)
+
+  useEffect(() => {
+    if (walletDetails?.balance == 0) {
       toast.error("Please fund your wallet to continue using our services", {
         icon: <FaMoneyBill size={24} />,
         duration: 5000,
         className: "p-4 text-sm text-red-600",
       })
     }
-  }, [user?.wallet])
-
-  useEffect(() => {
-    getWalletHistory()
-  }, [getWalletHistory])
+  }, [])
 
   // Transform wallet history data to match table structure
   const transformedTransactionData =
-    walletHistory?.map((transaction) => {
+    walletDetails?.transactions?.map((transaction) => {
       // Format date
       const formatDate = (dateString) => {
         const date = new Date(dateString)
@@ -110,7 +123,7 @@ export const Wallet = () => {
 
       return {
         id: transaction.reference || transaction._id,
-        type: formatTransactionType(transaction.transaction_type),
+        type: formatTransactionType(transaction.type),
         amount: formatAmount(transaction.amount),
         date: formatDate(transaction.transaction_date || transaction.createdAt),
         status: formatStatus(transaction.status),
@@ -254,7 +267,7 @@ export const Wallet = () => {
     )
   }
 
-  const handleTransferModal = useCallback(() => {
+  /* const handleTransferModal = useCallback(() => {
     // Mock user data (replace with API call later)
     const mockUserLookup = (phone) => {
       return new Promise((resolve) => {
@@ -305,9 +318,107 @@ export const Wallet = () => {
       title: "Transfer to others",
       content: <TransferForm onContinue={handleContinue} />,
     })
-  }, [openModal, closeModal])
+  }, [openModal, closeModal]) */
 
-  const handleFundWalletModal = useCallback(() => {
+const handleTransferModal = useCallback(() => {
+  const { validateTransferPhoneNumber, transferToUser } = useWalletStore.getState()
+
+  const handleContinue = async (phone, ownerType) => {
+    // Debug log to verify values
+    console.log("handleContinue called with:", { phone, ownerType })
+    
+    if (!phone) {
+      toast.error("Phone number is required")
+      return
+    }
+
+    try {
+      // Validate phone number using store method
+      const response = await validateTransferPhoneNumber(phone, ownerType)
+      
+      console.log("Validation response:", response)
+      
+      if (!response?.data) {
+        return // Error toast is shown in store
+      }
+
+      const userData = {
+        name: response.data.name || response.data.fullName || response.data.firstName || "User",
+        phone: phone,
+        ownerType: ownerType,
+        ...response.data
+      }
+
+      closeModal()
+
+      // Open amount form modal
+      const handleConfirm = async (amount, description = "") => {
+        try {
+          const transferResponse = await transferToUser(
+            parseFloat(amount),
+            description || `Transfer to ${userData.name}`,
+            ownerType,
+            phone  // Using phone instead of phoneNumber
+          )
+
+          if (transferResponse) {
+            closeModal()
+            
+            // Refresh wallet data
+            await getMe()
+            //await getWalletHistory()
+            await getUserWalletDetails()
+
+            // Show success modal
+            openModal({
+              title: "Transfer Successful",
+              icon: <img src="/Illustration.png" alt="Success" className="w-24 h-24 mx-auto" />,
+              content: (
+                <div className="text-center">
+                  <p className="text-sm text-gray-600">
+                    Your transfer of{" "}
+                    <span className="text-blue-600 font-semibold">
+                      ₦{parseInt(amount).toLocaleString()}
+                    </span>{" "}
+                    to{" "}
+                    <span className="text-blue-600 font-semibold">{userData.name}</span>
+                    {" "}({phone}) was completed successfully.
+                  </p>
+                </div>
+              ),
+              buttons: [
+                {
+                  label: "Continue",
+                  primary: true,
+                  onClick: closeModal,
+                },
+              ],
+            })
+          }
+        } catch (error) {
+          console.error("Transfer failed:", error)
+        }
+      }
+
+      openModal({
+        title: "Transfer to others",
+        content: <AmountForm userData={userData} onConfirm={handleConfirm} onCancel={closeModal} />,
+      })
+
+    } catch (error) {
+      console.error("Phone validation failed:", error)
+    }
+  }
+
+  setOpenSideMenu(false)
+  openModal({
+    title: "Transfer to others",
+    content: <TransferForm onContinue={handleContinue} onCancel={closeModal} />,
+  })
+}, [openModal, closeModal, getMe, getUserWalletDetails])
+
+
+  /* const handleFundWalletModal = useCallback(() => {
     const handleContinue = (amount) => {
       // Here you would integrate with Paystack
       console.log("Processing payment for:", amount)
@@ -345,17 +456,64 @@ export const Wallet = () => {
         </div>
       ),
     })
-  }, [openModal, closeModal])
+  }, [openModal, closeModal]) */
+
+  const handleFundWalletModal = useCallback(() => {
+    const handleSuccess = async (amount) => {
+      closeModal()
+    
+      // Refresh wallet data
+      await getMe()
+      await getUserWalletDetails()
+      //await getWalletHistory()
+    
+      // Show success modal
+      openModal({
+        title: "Payment Successful",
+        icon: <img src="/Illustration.png" alt="Success" className="w-24 h-24 mx-auto" />,
+        content: (
+          <div className="text-center">
+            <p className="text-sm text-gray-600">
+              Your wallet has been funded with{" "}
+              <span className="text-blue-600 font-semibold">
+                ₦{parseInt(amount).toLocaleString()}
+              </span>{" "}
+              successfully.
+            </p>
+          </div>
+        ),
+        buttons: [
+          {
+            label: "Continue",
+            primary: true,
+            onClick: closeModal,
+          },
+        ],
+      })
+    }
+
+    openModal({
+      title: "Fund Wallet",
+      content: (
+        <div>
+          <p className="text-sm text-gray-500 mb-4">
+            Enter the amount you'd like to fund your wallet with. You'll be redirected to Paystack to complete your transaction.
+          </p>
+          <FundWalletForm onSuccess={handleSuccess} onClose={closeModal} />
+        </div>
+      ),
+    })
+}, [openModal, closeModal, getMe, getUserWalletDetails])
 
   // Loading state
-  if (isLoading) {
+  if (walletLoading) {
     return (
       <AppLayout title={"Wallet"} icon={<WalletIcon />}>
         <div className="p-6 space-y-2">
           <div className="flex flex-col md:flex-row gap-3">
             <CardComponent
               title="Wallet balance"
-              subtitle={loading ? "Loading..." : `₦${user?.wallet}.00`}
+              subtitle={walletLoading ? "Loading..." : `₦${walletDetails?.balance}.00`}
               variant="blue"
               content={
                 <div className="flex space-x-2 p-1 w-full mt-16">
@@ -396,13 +554,13 @@ export const Wallet = () => {
     return (
       <AppLayout title={"Wallet"} icon={<WalletIcon />}>
         <div className="p-6 space-y-2">
-          <div className="flex flex-col md:flex-row gap-3">
+          <div className="flex flex-col xl:flex-row gap-3">
             <CardComponent
               title="Wallet balance"
-              subtitle={loading ? "Error" : `₦${user?.wallet}.00`}
+              subtitle={loading ? "Error" : `${walletDetails?.currency} ${walletDetails?.balance.toLocaleString("en-US")}`}
               variant="blue"
               content={
-                <div className="flex space-x-2 p-1 w-full mt-16">
+                <div className="flex flex-col lg:flex-row gap-2 space-x-2 p-1 w-full mt-16 flex-wrap lg:flex-nowrap items-center justify-start">
                   <ButtonComponent
                     onClick={handleFundWalletModal}
                     buttonStyles="sm:w-72"
@@ -427,7 +585,7 @@ export const Wallet = () => {
             <p className="text-base font-medium">Transactions</p>
             <div className="text-center py-8">
               <p className="text-red-600 mb-4">Failed to load transactions</p>
-              <ButtonComponent label="Retry" onClick={() => getWalletHistory()} variant="primary" />
+              <ButtonComponent label="Retry" onClick={() => getUserWalletDetails()} variant="primary" />
             </div>
           </div>
         </div>
@@ -438,10 +596,10 @@ export const Wallet = () => {
   return (
     <AppLayout title={"Wallet"} icon={<WalletIcon />}>
       <div className="p-6 space-y-2">
-        <div className="flex flex-col md:flex-row gap-3">
+        <div className="flex flex-col xl:flex-row gap-3">
           <CardComponent
             title="Wallet balance"
-            subtitle={loading ? "Loading..." : `₦${user?.wallet.toLocaleString("en-US")}.00`} 
+            subtitle={walletBalance ? `₦${walletBalance.toLocaleString("en-US")}` : "₦0.00"}
             variant="blue"
             content={
               <div className="flex space-x-2 p-1 w-full mt-16">

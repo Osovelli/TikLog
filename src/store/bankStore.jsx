@@ -10,7 +10,7 @@ const useBankStore = create((set, get) => ({
     getBanks: async () => {
         set({ loading: true, error: null });
         try {
-            const response = await axiosInstance.get(`bank/get-all-banks`);
+            const response = await axiosInstance.get(`/bank/get-all-banks`);
             console.log("Banks fetched:", response.data.data);
             set({ banks: response.data.data });
         } catch (error) {

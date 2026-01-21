@@ -138,7 +138,7 @@ const useAuthStore = create((set) => ({
       });
       toast.success("otp verified");
       set({ isOtp: true, loading: false })
-      sessionStorage.setItem('accessToken', response.data?.data?.token);
+      localStorage.setItem('accessToken', response.data?.data?.token);
       //localStorage.setItem('refreshToken', response.data.data.refreshToken);
       /* return { success: true, data: response.data }; */
     } catch (error) {
