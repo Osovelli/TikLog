@@ -6,6 +6,7 @@ const useBankStore = create((set, get) => ({
     loading: false,
     error: null,
     banks: null,
+    myBankAccounts: null,
 
     getBanks: async () => {
         set({ loading: true, error: null });
@@ -18,6 +19,24 @@ const useBankStore = create((set, get) => ({
                 error: error?.response?.data?.message || "Failed to fetch banks",
             });
             console.error("Error fetching banks:", error)
+        } finally {
+            set({ loading: false });
+        }
+    },
+
+    getMyBankAccounts: async () => {
+        set({ loading: true, error: null });
+        try {
+            const response = await axiosInstance.get(`/bank/my-bank-accounts`);
+            console.log("My bank accounts fetched:", response.data);
+            set({ myBankAccounts: response.data?.data });  // Store in state
+            return response.data;
+        } catch (error) {
+            set({
+                error: error?.response?.data?.message || "Failed to fetch bank accounts",
+            });
+            toast.error("Failed to fetch bank accounts");
+            console.error("Error fetching bank accounts:", error);
         } finally {
             set({ loading: false });
         }
@@ -75,10 +94,10 @@ const useBankStore = create((set, get) => ({
         }
     },
 
-    validateBankAccount: async (accountNumber, bankCode) => {
+    validateBankAccount: async ({bankCode, accountNumber}) => {
         set({ loading: true, error: null });
         try {
-            const response = await axiosInstance.post(`/bank/validate`, { accountNumber, bankCode });
+            const response = await axiosInstance.post('/bank/validate', { bankCode, accountNumber });
             console.log("Bank account validated:", response.data);
             return response.data;
         } catch (error) {

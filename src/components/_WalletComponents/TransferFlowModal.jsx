@@ -124,7 +124,7 @@ export const TransferForm = ({ onContinue, onCancel }) => {
           <SelectTrigger className="w-full h-12">
             <SelectValue placeholder="Select recipient type" />
           </SelectTrigger>
-          <SelectContent className="-z-50">
+          <SelectContent className="max-h-60 z-[9999] w-96">
             <SelectItem value="customer">Customer</SelectItem>
             <SelectItem value="vendor">Vendor</SelectItem>
             <SelectItem value="rider">Rider</SelectItem>

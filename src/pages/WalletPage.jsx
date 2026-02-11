@@ -13,7 +13,14 @@ import useAuthStore from "@/store/authStore"
 import toast from "react-hot-toast"
 import { FaMoneyBill } from "react-icons/fa"
 import useWalletStore from "@/store/walletStore"
-import { get } from "react-hook-form"
+import { 
+  WithdrawMethodModal,
+  SelectBankModal,
+  AddBankModal,
+  WithdrawalDetailsForm
+} from "@/components/_WalletComponents/WithdrawalFlowModal"
+import useBankStore from "@/store/bankStore"
+import { ArrowDownLeftIcon } from "lucide-react"
 
 const paymentMethods = [
   {
@@ -48,10 +55,12 @@ const columns = [
 export const WalletPage = () => {
   const [openSideMenu, setOpenSideMenu] = useState(false)
   const [selectedTransaction, setSelectedTransaction] = useState(null)
-  const { createDeposit, verifyDeposit } = useWalletStore()
+  //const { createDeposit, verifyDeposit } = useWalletStore()
+  const [savedBanks, setSavedBanks] = useState([])
   const { openModal, closeModal } = useModal()
   const { getMe, loading } = useAuthStore() 
   const { getWalletHistory, walletHistory, getUserWalletDetails, walletDetails, loading: walletLoading, error } = useWalletStore()
+  const { getBanks, banks, getBankById, loading: bankLoading } = useBankStore()
 
   const walletBalance = walletDetails?.balance || 0
 
@@ -61,7 +70,22 @@ export const WalletPage = () => {
 
   console.log("WALLET DETAILS", walletDetails) */
 
+  // Fetch banks on component mount
+  useEffect(() => {
+    const fetchBanks = async () => {
+      await getBanks()
+    }
+    fetchBanks()
+  }, [])
 
+  // Update saved banks when wallet details change
+  useEffect(() => {
+    if (walletDetails?.bankAccounts) {
+      setSavedBanks(walletDetails.bankAccounts)
+    }
+  }, [walletDetails])
+
+  // Fetch wallet history on component mount
   useEffect(() => {
     //getWalletHistory()
     getUserWalletDetails()
@@ -505,6 +529,149 @@ const handleTransferModal = useCallback(() => {
     })
 }, [openModal, closeModal, getMe, getUserWalletDetails])
 
+
+const handleWithdrawModal = useCallback(() => {
+  const { createWithdrawalOtp, verifyWithdrawal, getUserWalletDetails } = useWalletStore.getState()
+  const { getBankById } = useBankStore.getState()
+
+  let selectedBank = null
+
+  // Step 1: Choose withdrawal method
+  const showMethodSelection = () => {
+    openModal({
+      title: "Withdraw Funds",
+      content: (
+        <WithdrawMethodModal
+          onSelectMethod={(method) => {
+            if (method === "bank") {
+              closeModal()
+              showBankSelection()
+            } else {
+              toast.info("PayPal withdrawals coming soon!")
+            }
+          }}
+          onCancel={closeModal}
+        />
+      ),
+    })
+  }
+
+  // Step 2: Select bank account
+  const showBankSelection = () => {
+    openModal({
+      title: "Select Bank Account",
+      content: (
+        <SelectBankModal
+          savedBanks={walletDetails?.bankAccounts || []}
+          loading={bankLoading}
+          onSelectBank={async (bank) => {
+            try {
+              // Fetch full bank details
+              const bankDetails = await getBankById(bank._id || bank.id)
+              selectedBank = bankDetails?.data || bank
+              closeModal()
+              showWithdrawalForm()
+            } catch (error) {
+              console.error("Failed to get bank details:", error)
+              selectedBank = bank
+              closeModal()
+              showWithdrawalForm()
+            }
+          }}
+          onAddBank={() => {
+            closeModal()
+            showAddBank()
+          }}
+          onCancel={closeModal}
+        />
+      ),
+    })
+  }
+
+  // Step 3: Add new bank
+  const showAddBank = () => {
+    openModal({
+      title: "Add Bank Account",
+      content: (
+        <AddBankModal
+          onSuccess={async () => {
+            closeModal()
+            // Refresh wallet details to get updated bank list
+            await getUserWalletDetails()
+            showBankSelection()
+          }}
+          onCancel={() => {
+            closeModal()
+            showBankSelection()
+          }}
+        />
+      ),
+    })
+  }
+
+  // Step 4: Withdrawal form
+  const showWithdrawalForm = () => {
+    if (!selectedBank) {
+      toast.error("Please select a bank account")
+      showBankSelection()
+      return
+    }
+
+    openModal({
+      title: "Withdraw Funds",
+      content: (
+        <WithdrawalDetailsForm
+          selectedBank={selectedBank}
+          onSubmit={async (amount, bank) => {
+            closeModal()
+            
+            // Refresh wallet data
+            await getMe()
+            await getUserWalletDetails()
+
+            // Show success modal
+            openModal({
+              title: "Withdrawal Successful",
+              icon: <img src="/Illustration.png" alt="Success" className="w-24 h-24 mx-auto" />,
+              content: (
+                <div className="text-center">
+                  <p className="text-sm text-gray-600">
+                    Your withdrawal of{" "}
+                    <span className="text-blue-600 font-semibold">
+                      ₦{parseInt(amount).toLocaleString()}
+                    </span>{" "}
+                    to{" "}
+                    <span className="text-blue-600 font-semibold">{bank.bankName}</span>
+                    {" "}(****{bank.accountNumber?.slice(-4)}) has been initiated successfully.
+                  </p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    You will receive your funds within 24 hours.
+                  </p>
+                </div>
+              ),
+              buttons: [
+                {
+                  label: "Continue",
+                  primary: true,
+                  onClick: closeModal,
+                },
+              ],
+            })
+          }}
+          onBack={() => {
+            closeModal()
+            showBankSelection()
+          }}
+          onCancel={closeModal}
+        />
+      ),
+    })
+  }
+
+  // Start the flow
+  showMethodSelection()
+}, [openModal, closeModal, getMe, walletDetails, bankLoading])
+
   // Loading state
   if (walletLoading) {
     return (
@@ -602,18 +769,25 @@ const handleTransferModal = useCallback(() => {
             subtitle={walletBalance ? `₦${walletBalance.toLocaleString("en-US")}` : "₦0.00"}
             variant="blue"
             content={
-              <div className="flex space-x-2 p-1 w-full mt-16">
+              <div className="flex flex-wrap gap-2 p-1 w-full mt-16">
                 <ButtonComponent
                   onClick={handleFundWalletModal}
-                  buttonStyles="sm:w-72"
+                  buttonStyles="flex-1 min-w-[120px]"
                   label={"Add fund"}
                   icon={<Wallet2Icon size={18} />}
                   variant="primary"
                 />
                 <ButtonComponent
+                  onClick={handleWithdrawModal}
+                  buttonStyles="flex-1 min-w-[120px]"
+                  label={"Withdraw"}
+                  icon={<ArrowDownLeftIcon size={18} />}
+                  variant="primary"
+                />
+                <ButtonComponent
                   onClick={handleTransferModal}
-                  buttonStyles="sm:w-72"
-                  label={"Transfer to others"}
+                  buttonStyles="flex-1 min-w-[120px]"
+                  label={"Transfer"}
                   icon={<ArrowUpRightIcon size={18} />}
                   variant="primary"
                 />
