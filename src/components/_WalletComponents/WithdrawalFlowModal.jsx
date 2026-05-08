@@ -269,6 +269,10 @@ export const AddBankModal = ({ onSuccess, onCancel }) => {
   const [accountName, setAccountName] = useState("")
   const [isValidating, setIsValidating] = useState(false)
   const [isValidated, setIsValidated] = useState(false)
+  const [validationError, setValidationError] = useState("")
+
+  // Track the last validated combo to avoid duplicate calls
+  const [lastValidated, setLastValidated] = useState({ bankCode: "", accountNumber: "" })
 
   const { getBanks, banks, validateBankAccount, addBankAccount, loading } = useBankStore()
 
@@ -276,32 +280,125 @@ export const AddBankModal = ({ onSuccess, onCancel }) => {
     getBanks()
   }, [getBanks])
 
-  // Auto-validate when account number and bank are selected
+  // Debounced auto-validation
   useEffect(() => {
-    const validateAccount = async () => {
-      if (accountNumber.length === 10 && bankCode) {
-        setIsValidating(true)
-        setAccountName("")
+    // Only validate when we have a 10-digit account number and a bank selected
+    if (accountNumber.length !== 10 || !bankCode) {
+      // Reset validation if inputs become incomplete
+      if (isValidated) {
         setIsValidated(false)
-
-        try {
-          const response = await validateBankAccount({bankCode, accountNumber})
-          if (response?.data?.account_name || response?.data?.accountName) {
-            setAccountName(response.data.account_name || response.data.accountName)
-            setIsValidated(true)
-            toast.success("Account validated successfully!")
-          }
-        } catch (error) {
-          toast.error("Failed to validate account") 
-          console.error("Account validation error:", error)
-        } finally {
-          setIsValidating(false)
-        }
+        setAccountName("")
       }
+      return
     }
 
-    validateAccount()
-  }, [accountNumber, bankCode, validateBankAccount])
+    // Skip if this exact combination was already validated successfully
+    if (
+      lastValidated.bankCode === bankCode && 
+      lastValidated.accountNumber === accountNumber &&
+      isValidated
+    ) {
+      return
+    }
+
+    // Reset previous validation
+    setAccountName("")
+    setIsValidated(false)
+    setValidationError("")
+
+    // Debounce: wait 800ms after last change before calling API
+    const debounceTimer = setTimeout(async () => {
+      setIsValidating(true)
+
+      try {
+        const response = await validateBankAccount({ bankCode, accountNumber })
+        
+        if (response?.data?.account_name || response?.data?.accountName) {
+          const name = response.data.account_name || response.data.accountName
+          setAccountName(name)
+          setIsValidated(true)
+          setValidationError("")
+          setLastValidated({ bankCode, accountNumber })
+          toast.success("Account validated successfully!")
+        } else {
+          setValidationError("Could not validate this account")
+          setIsValidated(false)
+        }
+      } catch (error) {
+        // Handle 429 specifically
+        if (error?.response?.status === 429) {
+          setValidationError("Too many attempts. Please wait a moment and try again.")
+        } else {
+          setValidationError("Failed to validate account. Try again.")
+        }
+        console.error("Account validation error:", error)
+        setIsValidated(false)
+      } finally {
+        setIsValidating(false)
+      }
+    }, 800) // 800ms debounce
+
+    // Cleanup: cancel the timer if inputs change before it fires
+    return () => clearTimeout(debounceTimer)
+  }, [accountNumber, bankCode]) // Removed validateBankAccount from deps to prevent extra triggers
+
+  // Manual retry button for when debounced validation fails
+  const handleManualValidate = async () => {
+    if (accountNumber.length !== 10 || !bankCode || isValidating) return
+
+    setIsValidating(true)
+    setValidationError("")
+    setAccountName("")
+    setIsValidated(false)
+
+    try {
+      const response = await validateBankAccount({ bankCode, accountNumber })
+      
+      if (response?.data?.account_name || response?.data?.accountName) {
+        const name = response.data.account_name || response.data.accountName
+        setAccountName(name)
+        setIsValidated(true)
+        setValidationError("")
+        setLastValidated({ bankCode, accountNumber })
+        toast.success("Account validated successfully!")
+      } else {
+        setValidationError("Could not validate this account")
+      }
+    } catch (error) {
+      if (error?.response?.status === 429) {
+        setValidationError("Too many attempts. Please wait a moment and try again.")
+      } else {
+        setValidationError("Failed to validate account. Try again.")
+      }
+      console.error("Account validation error:", error)
+    } finally {
+      setIsValidating(false)
+    }
+  }
+
+  // Reset validation state when bank or account number changes
+  const handleAccountNumberChange = (value) => {
+    const cleaned = value.replace(/\D/g, "").slice(0, 10)
+    setAccountNumber(cleaned)
+    
+    // If changing from a validated state, reset
+    if (isValidated && cleaned !== lastValidated.accountNumber) {
+      setIsValidated(false)
+      setAccountName("")
+      setValidationError("")
+    }
+  }
+
+  const handleBankChange = (value) => {
+    setBankCode(value)
+    
+    // If changing from a validated state, reset
+    if (isValidated && value !== lastValidated.bankCode) {
+      setIsValidated(false)
+      setAccountName("")
+      setValidationError("")
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -327,10 +424,10 @@ export const AddBankModal = ({ onSuccess, onCancel }) => {
         Add a new bank account for withdrawals
       </p>
 
-        {/* Bank Selection */}
+      {/* Bank Selection */}
       <div className="space-y-2 text-left">
-        <Label className="">Select Bank</Label>
-        <Select value={bankCode} onValueChange={setBankCode} disabled={loading}>
+        <Label>Select Bank</Label>
+        <Select value={bankCode} onValueChange={handleBankChange} disabled={loading}>
           <SelectTrigger className="w-full h-12">
             <SelectValue placeholder="Choose your bank" />
           </SelectTrigger>
@@ -351,31 +448,64 @@ export const AddBankModal = ({ onSuccess, onCancel }) => {
 
       {/* Account Number */}
       <div className="space-y-2 text-left">
-        <Label className="">Account Number</Label>
+        <Label>Account Number</Label>
         <div className="relative">
           <Input
             type="text"
             placeholder="Enter 10-digit account number"
             value={accountNumber}
-            onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
+            onChange={(e) => handleAccountNumberChange(e.target.value)}
             className="h-12 pr-10"
             disabled={loading}
             maxLength={10}
           />
-          {isValidating && (
-            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-blue-500" />
-          )}
-          {isValidated && (
-            <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
-          )}
-          {!isValidated && accountNumber.length === 10 && !isValidating && (
-            <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-red-500" />
-          )}
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            {isValidating && (
+              <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+            )}
+            {isValidated && !isValidating && (
+              <CheckCircle className="w-5 h-5 text-green-500" />
+            )}
+            {validationError && !isValidating && (
+              <AlertCircle className="w-5 h-5 text-red-500" />
+            )}
+          </div>
         </div>
+        
+        {/* Character count */}
+        <p className="text-xs text-gray-400 text-right">
+          {accountNumber.length}/10
+        </p>
       </div>
 
+      {/* Validation Error with Retry */}
+      {validationError && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+            <p className="text-sm text-red-700">{validationError}</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleManualValidate}
+            disabled={isValidating}
+            className="text-sm text-red-600 hover:text-red-800 font-medium whitespace-nowrap hover:underline disabled:opacity-50"
+          >
+            {isValidating ? "Retrying..." : "Retry"}
+          </button>
+        </div>
+      )}
+
+      {/* Validating Indicator */}
+      {isValidating && (
+        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
+          <Loader2 className="w-5 h-5 animate-spin text-blue-600 flex-shrink-0" />
+          <p className="text-sm text-blue-700">Validating account number...</p>
+        </div>
+      )}
+
       {/* Account Name (Auto-filled) */}
-      {accountName && (
+      {accountName && isValidated && (
         <div className="space-y-2">
           <Label>Account Name</Label>
           <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
